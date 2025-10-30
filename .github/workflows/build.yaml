@@ -289,7 +289,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ env.TAG_NAME }}
-        release_name: DNS Leak Test ${{ env.TAG_NAME }}
+        release_name: X2J ${{ env.TAG_NAME }}
         body: |
           ## 🚀 X2J Release
 
