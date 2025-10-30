@@ -1,0 +1,227 @@
+name: Build and Test
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go-version: [1.25.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Print Go version
+      run: go version
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Verify dependencies
+      run: go mod verify
+
+  build:
+    name: Build for ${{ matrix.target.os }}/${{ matrix.target.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          # Linux
+          - { os: linux, arch: amd64, name: linux-x64, binary: x2j-linux-x64 }
+          - { os: linux, arch: 386, name: linux-x86, binary: x2j-linux-x86 }
+          # Windows
+          - { os: windows, arch: amd64, name: windows-x64, binary: x2j-windows-x64.exe }
+          - { os: windows, arch: 386, name: windows-x86, binary: x2j-windows-x86.exe }
+          # macOS
+          - { os: darwin, arch: amd64, name: macos-x64, binary: x2j-macos-x64 }
+          - { os: darwin, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64 }
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.25.x
+
+    - name: Set up environment
+      run: |
+        echo "GOOS=${{ matrix.target.os }}" >> $GITHUB_ENV
+        echo "GOARCH=${{ matrix.target.arch }}" >> $GITHUB_ENV
+
+    - name: Tidy and verify modules
+      run: |
+        go mod tidy
+        go mod verify
+
+    - name: Build binary
+      run: |
+        # Build the application with the correct name
+        echo "Building for ${{ matrix.target.name }} (${{ matrix.target.os }}/${{ matrix.target.arch }})"
+        CGO_ENABLED=0 GOOS=${{ matrix.target.os }} GOARCH=${{ matrix.target.arch }} go build -o ${{ matrix.target.binary }} .
+        
+        # Show file information
+        ls -la ${{ matrix.target.binary }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: x2j-${{ matrix.target.name }}
+        path: ${{ matrix.target.binary }}
+
+  mobile-build:
+    name: Build Mobile Libraries
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.25.x
+
+    - name: Install Android SDK
+      uses: malinskiy/action-android/install-sdk@release/0.1.4
+
+    - name: Install gomobile
+      run: |
+        go install golang.org/x/mobile/cmd/gomobile@latest
+        gomobile init
+
+    - name: Make mobile.sh executable
+      run: chmod +x mobile.sh
+
+    - name: Build Android and iOS Libraries
+      run: |
+        export GITHUB_ACTIONS=true
+        ./mobile.sh <<< "4"
+
+    - name: Upload Android Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: x2j-android
+        path: build/android/*
+
+    - name: Package iOS Framework
+      run: |
+        cd build/ios
+        zip -r IosX2J.xcframework.zip IosX2J.xcframework
+
+    - name: Upload iOS Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: x2j-ios
+        path: build/ios/*
+
+  release:
+    name: Create Release
+    needs: [build, mobile-build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set tag name
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "TAG_NAME=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+        else
+          echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        fi
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: downloaded-artifacts
+
+    - name: Prepare release assets
+      run: |
+        # Create a directory for all release assets
+        mkdir -p release-assets
+        
+        # Move all binaries from downloaded artifact directories to the release-assets directory
+        find downloaded-artifacts -name "x2j-*" -type f | while read file; do
+          mv "$file" release-assets/
+        done
+        
+        # Also move mobile artifacts
+        find downloaded-artifacts -name "*.aar" -type f | while read file; do
+          mv "$file" release-assets/
+        done
+        
+        find downloaded-artifacts -name "*.xcframework.zip" -type f | while read file; do
+          mv "$file" release-assets/
+        done
+        
+        # List the release assets
+        echo "Release assets prepared:"
+        ls -la release-assets/
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        release_name: DNS Leak Test ${{ env.TAG_NAME }}
+        body: |
+          ## 🚀 X2J Release
+
+          ### 💻 Installation
+
+          #### From Binary (Recommended)
+          Download the appropriate binary for your platform from the table below and run it directly.
+
+          #### From Source
+          ```bash
+          git clone https://github.com/code3-dev/x2j.git
+          cd x2j
+          go build .
+          ./x2j  # or ./x2j.exe on Windows
+          ```
+
+          ### ⬇️ Download
+
+          | Platform | Architecture | Download |
+          |----------|-------------|----------|
+          | Windows | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x64.exe"><img src="https://img.shields.io/badge/Windows-x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64"></a> |
+          | Windows | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x86.exe"><img src="https://img.shields.io/badge/Windows-x86-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x86"></a> |
+          | Linux | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x64"><img src="https://img.shields.io/badge/Linux-x64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x64"></a> |
+          | Linux | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x86"><img src="https://img.shields.io/badge/Linux-x86-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x86"></a> |
+          | macOS | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-x64"><img src="https://img.shields.io/badge/macOS-x64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS x64"></a> |
+          | macOS | ARM64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-arm64"><img src="https://img.shields.io/badge/macOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS ARM64"></a> |
+          | Android | AAR | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j.aar"><img src="https://img.shields.io/badge/Android-AAR-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android AAR"></a> |
+          | iOS | Framework | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/IosX2J.xcframework.zip"><img src="https://img.shields.io/badge/iOS-Framework-000000?style=for-the-badge&logo=apple&logoColor=white" alt="iOS Framework"></a> |
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: release-assets/*
+        tag_name: ${{ env.TAG_NAME }}
+        token: ${{ secrets.GITHUB_TOKEN }}
