@@ -183,26 +183,25 @@ jobs:
         mkdir -p release-assets
         
         # Move all binaries from downloaded artifact directories to the release-assets directory
-        find downloaded-artifacts -name "x2j-*" -type f | while read file; do
-          mv "$file" release-assets/
-        done
+        find downloaded-artifacts -name "x2j-*" -type f -exec mv {} release-assets/ \;
         
         # Also move mobile artifacts
-        find downloaded-artifacts -name "*.aar" -type f -o -name "*.jar" -type f | while read file; do
-          mv "$file" release-assets/
-        done
+        find downloaded-artifacts -name "*.aar" -type f -exec mv {} release-assets/ \;
+        find downloaded-artifacts -name "*.jar" -type f -exec mv {} release-assets/ \;
+        find downloaded-artifacts -name "*.xcframework.zip" -type f -exec mv {} release-assets/ \;
         
-        find downloaded-artifacts -name "*.xcframework.zip" -type f | while read file; do
-          mv "$file" release-assets/
-        done
+        # Move Windows DLLs from their subdirectories
+        find downloaded-artifacts -path "*/x64/*.dll" -type f -exec cp {} release-assets/x2j-windows-x64.dll \;
+        find downloaded-artifacts -path "*/x86/*.dll" -type f -exec cp {} release-assets/x2j-windows-x86.dll \;
         
-        # Move Windows DLLs
-        find downloaded-artifacts -path "*/x64/*.dll" -type f | while read file; do
-          mv "$file" release-assets/x2j-windows-x64.dll
-        done
-        
-        find downloaded-artifacts -path "*/x86/*.dll" -type f | while read file; do
-          mv "$file" release-assets/x2j-windows-x86.dll
+        # If DLLs don't exist with full path, look for them in any directory
+        find downloaded-artifacts -name "x2j.dll" -type f | while read file; do
+          dir_name=$(dirname "$file")
+          if [[ "$dir_name" == *"/x64"* ]]; then
+            cp "$file" release-assets/x2j-windows-x64.dll
+          elif [[ "$dir_name" == *"/x86"* ]]; then
+            cp "$file" release-assets/x2j-windows-x86.dll
+          fi
         done
         
         # List the release assets
