@@ -36,7 +36,7 @@ build_android() {
     echo "Building Android library..."
     gomobile bind -v \
         -target=android \
-        -androidapi 23 \
+        -androidapi 36 \
         -ldflags "-checklinkname=0" \
         -o build/android/x2j.aar \
         ./android
@@ -108,6 +108,34 @@ init_mobile_bind() {
     gomobile init
 }
 
+# Setup Android SDK for CI environments
+setup_android_sdk() {
+    if [ "$GITHUB_ACTIONS" = "true" ]; then
+        echo "Setting up Android SDK for GitHub Actions..."
+        if [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME" ]; then
+            echo "Android SDK found at $ANDROID_HOME"
+            # Ensure the required platform is installed
+            if [ -d "$ANDROID_HOME/platforms/android-36" ]; then
+                echo "Android SDK platform 36 already installed"
+            else
+                echo "Installing Android SDK platform 36..."
+                if [ -f "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+                    echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36"
+                elif [ -f "$ANDROID_HOME/cmdline-tools/bin/sdkmanager" ]; then
+                    echo "y" | $ANDROID_HOME/cmdline-tools/bin/sdkmanager "platforms;android-36"
+                else
+                    echo "SDK manager not found, attempting alternative installation..."
+                    # Try to install using apt-get if available
+                    sudo apt-get update
+                    sudo apt-get install -y android-sdk-platform-36
+                fi
+            fi
+        else
+            echo "ANDROID_HOME not set or directory doesn't exist"
+        fi
+    fi
+}
+
 # Main script
 if [ "$GITHUB_ACTIONS" = "true" ]; then
     # Auto mode for CI/CD: build both Android and iOS, then exit
@@ -120,6 +148,9 @@ if [ "$GITHUB_ACTIONS" = "true" ]; then
         build_windows
         exit 0
     fi
+    
+    # Setup Android SDK if needed
+    setup_android_sdk
     
     init_mobile_bind
     echo "Starting Android build..."

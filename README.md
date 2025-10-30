@@ -7,7 +7,7 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 - Supports all major V2Ray protocols:
   - VMess
   - VLess
-  - ShadowSocks
+  - Shadowsocks
   - Trojan
 - Cross-platform compatibility (Windows, macOS, Linux, Android, iOS)
 - Multiple output options:
@@ -45,9 +45,6 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 # Set custom DNS servers
 ./x2j -u <v2ray_link> -d "1.1.1.1, 1.0.0.1"
-
-# Clear DNS servers (use system DNS)
-./x2j -u <v2ray_link> -d ""
 ```
 
 ### Command Examples
@@ -105,7 +102,7 @@ Note: You can rename the executable file to anything for easier usage, for examp
 ./x2j -u "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:8080?security=tls&type=ws&path=/&host=example.com#test" -o vless_config.json -p 10809
 
 # ShadowSocks URL to file and console with custom port
-./x2j -u "ss://YWVzLTEyOC1nY206cGFzc3dvcmQ@127.0.0.1:8080#test" -o ss_config.json -p 10809 -c
+./x2j -u "ss://YWVzLTEyOC1nY206cGFzc3dvcmQ@127LjAuMC4xOjgwODA#test" -o ss_config.json -p 10809 -c
 
 # Trojan URL to file with custom port
 ./x2j -u "trojan://password@127.0.0.1:8080?security=tls&type=tcp#test" -o trojan_config.json -p 10809
@@ -119,6 +116,15 @@ Note: You can rename the executable file to anything for easier usage, for examp
 # VMess URL with single DNS server
 ./x2j -u "vmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOjAsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOjgwODAsInBzIjoidGVzdCIsInRscyI6IiIsInYiOjIsImFpZCI6MCwidHlwZSI6IiJ9" -d "1.1.1.1" -c
 ```
+
+## Mobile Platform Integration
+
+For developers integrating x2j into mobile applications, check out our platform-specific integration guides:
+
+- [Android Integration Guide](android/example) - Instructions for integrating the X2J Android library (AAR) into Android applications
+- [iOS Integration Guide](ios/example) - Instructions for integrating the X2J iOS framework (XCFramework) into iOS applications
+
+The mobile libraries are built using the [mobile.sh](mobile.sh) script which uses gomobile to create native libraries for each platform. The actual class and function names in the generated libraries follow gomobile's naming conventions based on the Go package and function names.
 
 ## Supported Protocols
 
