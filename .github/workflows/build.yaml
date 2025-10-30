@@ -42,7 +42,7 @@ jobs:
 
   build:
     name: Build for ${{ matrix.target.os }}/${{ matrix.target.arch }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         target:
@@ -53,9 +53,31 @@ jobs:
           - { os: windows, arch: amd64, name: windows-x64, binary: x2j-windows-x64.exe }
           - { os: windows, arch: 386, name: windows-x86, binary: x2j-windows-x86.exe }
           # macOS
-          - { os: darwin, arch: amd64, name: macos-x64, binary: x2j-macos-x64 }
-          - { os: darwin, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64 }
-
+          - { os: macos, arch: amd64, name: macos-x64, binary: x2j-macos-x64 }
+          - { os: macos, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64 }
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        exclude:
+          # Exclude combinations that don't make sense
+          - { target: { os: linux }, os: windows-latest }
+          - { target: { os: linux }, os: macos-latest }
+          - { target: { os: windows }, os: ubuntu-latest }
+          - { target: { os: windows }, os: macos-latest }
+          - { target: { os: macos }, os: ubuntu-latest }
+          - { target: { os: macos }, os: windows-latest }
+        include:
+          # Include specific combinations
+          - target: { os: linux, arch: amd64, name: linux-x64, binary: x2j-linux-x64 }
+            os: ubuntu-latest
+          - target: { os: linux, arch: 386, name: linux-x86, binary: x2j-linux-x86 }
+            os: ubuntu-latest
+          - target: { os: windows, arch: amd64, name: windows-x64, binary: x2j-windows-x64.exe }
+            os: windows-latest
+          - target: { os: windows, arch: 386, name: windows-x86, binary: x2j-windows-x86.exe }
+            os: windows-latest
+          - target: { os: macos, arch: amd64, name: macos-x64, binary: x2j-macos-x64 }
+            os: macos-latest
+          - target: { os: macos, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64 }
+            os: macos-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
