@@ -102,6 +102,8 @@ build_windows() {
 # Initialize mobile bind
 init_mobile_bind() {
     echo "Initializing mobile bind..."
+    go mod download
+    go mod tidy
     go install golang.org/x/mobile/cmd/gomobile@latest
     gomobile init
 }

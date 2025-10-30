@@ -111,10 +111,19 @@ jobs:
     - name: Install Android SDK
       uses: malinskiy/action-android/install-sdk@release/0.1.4
 
+    - name: Download Go dependencies
+      run: |
+        go mod download
+        go mod tidy
+
     - name: Install gomobile
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
         gomobile init
+
+    - name: Verify mobile bind dependency
+      run: |
+        go list golang.org/x/mobile/bind
 
     - name: Check if mobile packages exist
       id: check_mobile
