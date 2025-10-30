@@ -110,11 +110,29 @@ jobs:
 
     - name: Install Android SDK
       uses: malinskiy/action-android/install-sdk@release/0.1.4
+      with:
+        # Use the latest cmdline-tools
+        cmdline-tools-version: latest
 
     - name: Install Android SDK Platform
       run: |
         echo "Installing Android SDK platform for API level 36..."
-        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        
+        # Try multiple possible locations for sdkmanager
+        SDK_MANAGER_PATH=""
+        if [ -f "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+          SDK_MANAGER_PATH="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+        elif [ -f "$ANDROID_HOME/cmdline-tools/bin/sdkmanager" ]; then
+          SDK_MANAGER_PATH="$ANDROID_HOME/cmdline-tools/bin/sdkmanager"
+        else
+          echo "Error: sdkmanager not found at expected locations"
+          echo "Contents of cmdline-tools directory:"
+          find $ANDROID_HOME/cmdline-tools -name "sdkmanager" 2>/dev/null || echo "No sdkmanager found"
+          exit 1
+        fi
+        
+        echo "Using sdkmanager at $SDK_MANAGER_PATH"
+        echo "y" | $SDK_MANAGER_PATH "platforms;android-36" "build-tools;36.0.0"
         echo "Android SDK platform installation completed."
         # Verify installation
         ls -la $ANDROID_HOME/platforms/
@@ -123,7 +141,8 @@ jobs:
       run: |
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
+        # Add multiple possible paths for Android tools
+        echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
 
     - name: Download Go dependencies
       run: |
@@ -134,6 +153,8 @@ jobs:
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
         gomobile init
+        # Verify gomobile installation
+        gomobile version
 
     - name: Verify mobile bind dependency
       run: |
@@ -156,10 +177,29 @@ jobs:
         mkdir -p build/android
         mkdir -p build/ios
         
+        # Debug information
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+        echo "PATH: $PATH"
+        echo "Available Android platforms:"
+        ls -la $ANDROID_HOME/platforms/ || echo "No platforms directory found"
+        
         # Build Android library if android directory exists
         if [ -d "android" ]; then
           echo "Building Android library..."
+          # Verify that required platform is installed
+          if [ ! -d "$ANDROID_HOME/platforms/android-36" ]; then
+            echo "Error: Android SDK platform 36 not found"
+            exit 1
+          fi
+          
           gomobile bind -v -target=android -androidapi 36 -ldflags "-checklinkname=0" -o build/android/x2j.aar ./android
+          if [ $? -eq 0 ]; then
+            echo "✅ Android library built successfully"
+          else
+            echo "❌ Failed to build Android library"
+            exit 1
+          fi
         fi
         
         # Build iOS framework if ios directory exists
@@ -193,6 +233,7 @@ jobs:
         path: |
           build/android/*.aar
           build/android/*.jar
+          build/android/*
 
     - name: Package iOS Framework
       run: |
@@ -250,6 +291,11 @@ jobs:
         find downloaded-artifacts -name "*.jar" -type f -exec mv {} release-assets/ \;
         find downloaded-artifacts -name "*.xcframework.zip" -type f -exec mv {} release-assets/ \;
         
+        # Ensure Android artifacts have proper names
+        if [ -f "release-assets/x2j.aar" ]; then
+          mv release-assets/x2j.aar release-assets/x2j-android.aar
+        fi
+        
         # Move Windows DLLs from their subdirectories
         find downloaded-artifacts -path "*/x64/*.dll" -type f -exec cp {} release-assets/x2j-windows-x64.dll \;
         find downloaded-artifacts -path "*/x86/*.dll" -type f -exec cp {} release-assets/x2j-windows-x86.dll \;
@@ -304,7 +350,7 @@ jobs:
           | Linux | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x86"><img src="https://img.shields.io/badge/Linux-x86-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x86"></a> |
           | macOS | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-x64"><img src="https://img.shields.io/badge/macOS-x64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS x64"></a> |
           | macOS | ARM64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-arm64"><img src="https://img.shields.io/badge/macOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS ARM64"></a> |
-          | Android | AAR | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j.aar"><img src="https://img.shields.io/badge/Android-AAR-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android AAR"></a> |
+          | Android | AAR | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-android.aar"><img src="https://img.shields.io/badge/Android-AAR-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android AAR"></a> |
           | Android | JAR | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j.jar"><img src="https://img.shields.io/badge/Android-JAR-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android JAR"></a> |
           | iOS | Framework | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/IosX2J.xcframework.zip"><img src="https://img.shields.io/badge/iOS-Framework-000000?style=for-the-badge&logo=apple&logoColor=white" alt="iOS Framework"></a> |
         draft: false
