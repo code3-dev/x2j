@@ -115,8 +115,8 @@ jobs:
         cmdline-tools-version: latest
         # Add packages to install
         packages: >
-          platforms;android-36
-          build-tools;36.0.0
+          platforms;android-35
+          build-tools;35.0.0
 
     - name: Set up environment variables
       run: |
@@ -193,7 +193,7 @@ jobs:
             fi
           fi
           
-          gomobile bind -v -target=android -androidapi 36 -ldflags "-checklinkname=0" -o build/android/x2j.aar ./android
+          gomobile bind -v -target=android -androidapi 35 -ldflags "-checklinkname=0" -o build/android/x2j.aar ./android
           if [ $? -eq 0 ]; then
             echo "✅ Android library built successfully"
           else

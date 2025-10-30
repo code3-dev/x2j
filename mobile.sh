@@ -36,7 +36,7 @@ build_android() {
     echo "Building Android library..."
     gomobile bind -v \
         -target=android \
-        -androidapi 36 \
+        -androidapi 35 \
         -ldflags "-checklinkname=0" \
         -o build/android/x2j.aar \
         ./android
