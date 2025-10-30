@@ -91,20 +91,29 @@ jobs:
       run: |
         echo "GOOS=${{ matrix.target.os }}" >> $GITHUB_ENV
         echo "GOARCH=${{ matrix.target.arch }}" >> $GITHUB_ENV
+      shell: bash
 
     - name: Tidy and verify modules
       run: |
         go mod tidy
         go mod verify
+      shell: bash
 
     - name: Build binary
       run: |
         # Build the application with the correct name
         echo "Building for ${{ matrix.target.name }} (${{ matrix.target.os }}/${{ matrix.target.arch }})"
-        CGO_ENABLED=0 GOOS=${{ matrix.target.os }} GOARCH=${{ matrix.target.arch }} go build -o ${{ matrix.target.binary }} .
+        if [ "${{ matrix.target.os }}" = "windows" ]; then
+          # For Windows, we need to handle the extension and CGO
+          CGO_ENABLED=1 GOOS=windows GOARCH=${{ matrix.target.arch }} go build -o ${{ matrix.target.binary }} .
+        else
+          # For other platforms
+          CGO_ENABLED=0 GOOS=${{ matrix.target.os }} GOARCH=${{ matrix.target.arch }} go build -o ${{ matrix.target.binary }} .
+        fi
         
         # Show file information
         ls -la ${{ matrix.target.binary }}
+      shell: bash
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
