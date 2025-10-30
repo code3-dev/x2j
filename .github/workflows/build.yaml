@@ -172,8 +172,8 @@ jobs:
         if [ -d "android" ]; then
           echo "Building Android library..."
           # Verify that required platform is installed
-          if [ ! -d "$ANDROID_HOME/platforms/android-36" ]; then
-            echo "Error: Android SDK platform 36 not found"
+          if [ ! -d "$ANDROID_HOME/platforms/android-35" ]; then
+            echo "Error: Android SDK platform 35 not found"
             # Try to install it again
             SDK_MANAGER_PATH=""
             if [ -f "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
@@ -185,8 +185,8 @@ jobs:
             fi
             
             if [ -n "$SDK_MANAGER_PATH" ]; then
-              echo "Trying to install Android SDK platform 36 again..."
-              echo "y" | $SDK_MANAGER_PATH "platforms;android-36" "build-tools;36.0.0"
+              echo "Trying to install Android SDK platform 35 again..."
+              echo "y" | $SDK_MANAGER_PATH "platforms;android-35" "build-tools;35.0.0"
             else
               echo "Cannot find sdkmanager to install platform"
               exit 1
@@ -202,12 +202,7 @@ jobs:
           fi
         fi
         
-        # Build iOS framework if ios directory exists
-        if [ -d "ios" ]; then
-          echo "Building iOS framework..."
-          # Note: iOS build requires macOS environment, so this will be skipped on Ubuntu
-          echo "iOS build requires macOS environment, skipping..."
-        fi
+        # Note: iOS build requires macOS environment, so we'll handle it in a separate job
 
     - name: Skip Mobile Build (no mobile packages)
       if: steps.check_mobile.outputs.mobile_packages_exist == 'false'
@@ -225,22 +220,71 @@ jobs:
           build/android/*.jar
           build/android/*
 
-    - name: Package iOS Framework
+  ios-build:
+    name: Build iOS Framework
+    runs-on: macos-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.25.x
+
+    - name: Download Go dependencies
       run: |
-        cd build/ios
-        # Create a placeholder file since we're not building iOS on Ubuntu
-        touch ios-build-skipped.txt
-        echo "iOS build requires macOS environment" > ios-build-skipped.txt
+        go mod download
+        go mod tidy
+
+    - name: Install gomobile
+      run: |
+        go install golang.org/x/mobile/cmd/gomobile@latest
+        gomobile init
+        # Verify gomobile installation
+        gomobile version
+
+    - name: Check if iOS package exists
+      id: check_ios
+      run: |
+        if [ -d "ios" ]; then
+          echo "ios_package_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "ios_package_exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build iOS Framework (if package exists)
+      if: steps.check_ios.outputs.ios_package_exists == 'true'
+      run: |
+        echo "Building iOS framework..."
+        # Create build directory
+        mkdir -p build/ios
+        
+        # Build iOS framework
+        echo "Building iOS framework with gomobile..."
+        gomobile bind -v -target=ios -ldflags "-checklinkname=0" -o build/ios/IosX2J.xcframework ./ios
+        if [ $? -eq 0 ]; then
+          echo "✅ iOS framework built successfully"
+          # Package as zip for release
+          echo "Packaging iOS framework as zip..."
+          cd build/ios
+          zip -r IosX2J.xcframework.zip IosX2J.xcframework
+          cd ../..
+          echo "✅ iOS framework packaged as zip"
+        else
+          echo "❌ Failed to build iOS framework"
+          exit 1
+        fi
 
     - name: Upload iOS Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: x2j-ios
-        path: build/ios/*
+        name: x2j-ios-framework
+        path: build/ios/IosX2J.xcframework.zip
 
   release:
     name: Create Release
-    needs: [build, mobile-build]
+    needs: [build, mobile-build, ios-build]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     steps:
@@ -276,6 +320,11 @@ jobs:
         # Ensure Android artifacts have proper names
         if [ -f "release-assets/x2j.aar" ]; then
           mv release-assets/x2j.aar release-assets/x2j-android.aar
+        fi
+        
+        # Ensure iOS framework has proper name (if it was uploaded separately)
+        if [ -f "release-assets/IosX2J.xcframework.zip" ]; then
+          echo "iOS framework zip found and ready for release"
         fi
         
         # List the release assets
