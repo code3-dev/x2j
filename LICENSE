@@ -1,4 +1,4 @@
-GNU GENERAL PUBLIC LICENSE
+                    GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
@@ -174,8 +174,7 @@ your copyrighted material outside their relationship with you.
 
   Conveying under any other circumstances is permitted solely under
 the conditions stated below.  Sublicensing is not allowed; section 10
-makes it clear that this is not intended to limit any rights under
-this License.
+makes it unnecessary.
 
   3. Protecting Users' Legal Rights From Anti-Circumvention Law.
 
@@ -347,13 +346,17 @@ unpacking, reading or copying.
 License by making exceptions from one or more of its conditions.
 Additional permissions that are applicable to the entire Program shall
 be treated as though they were included in this License, to the extent
-that they are valid under applicable law.  Otherwise, they are
-separate licenses granted by the copyright holders.
+that they are valid under applicable law.  If additional permissions
+apply only to part of the Program, that part may be used separately
+under those permissions, but the entire Program remains governed by
+this License without regard to the additional permissions.
 
-  "You" refers to an individual or a legal entity exercising
-permissions granted by this License.  "Your" refers to the
-Licensee or to such entity if you are acting on behalf of the
-Licensee.
+  When you convey a copy of a covered work, you may at your option
+remove any additional permissions from that copy, or from any part of
+it.  (Additional permissions may be written to require their own
+removal in certain cases when you modify the work.)  You may place
+additional permissions on material, added by you to a covered work,
+for which you have or can give appropriate copyright permission.
 
   Notwithstanding any other provision of this License, for material you
 add to a covered work, you may (if authorized by the copyright holders of

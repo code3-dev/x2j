@@ -113,36 +113,17 @@ jobs:
       with:
         # Use the latest cmdline-tools
         cmdline-tools-version: latest
-
-    - name: Install Android SDK Platform
-      run: |
-        echo "Installing Android SDK platform for API level 36..."
-        
-        # Try multiple possible locations for sdkmanager
-        SDK_MANAGER_PATH=""
-        if [ -f "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
-          SDK_MANAGER_PATH="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-        elif [ -f "$ANDROID_HOME/cmdline-tools/bin/sdkmanager" ]; then
-          SDK_MANAGER_PATH="$ANDROID_HOME/cmdline-tools/bin/sdkmanager"
-        else
-          echo "Error: sdkmanager not found at expected locations"
-          echo "Contents of cmdline-tools directory:"
-          find $ANDROID_HOME/cmdline-tools -name "sdkmanager" 2>/dev/null || echo "No sdkmanager found"
-          exit 1
-        fi
-        
-        echo "Using sdkmanager at $SDK_MANAGER_PATH"
-        echo "y" | $SDK_MANAGER_PATH "platforms;android-36" "build-tools;36.0.0"
-        echo "Android SDK platform installation completed."
-        # Verify installation
-        ls -la $ANDROID_HOME/platforms/
+        # Add packages to install
+        packages: >
+          platforms;android-36
+          build-tools;36.0.0
 
     - name: Set up environment variables
       run: |
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
         # Add multiple possible paths for Android tools
-        echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
+        echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/bin:$ANDROID_HOME/cmdline-tools/bootstrap-version/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
 
     - name: Download Go dependencies
       run: |
@@ -184,13 +165,32 @@ jobs:
         echo "Available Android platforms:"
         ls -la $ANDROID_HOME/platforms/ || echo "No platforms directory found"
         
+        # Check if sdkmanager is available in PATH
+        which sdkmanager || echo "sdkmanager not found in PATH"
+        
         # Build Android library if android directory exists
         if [ -d "android" ]; then
           echo "Building Android library..."
           # Verify that required platform is installed
           if [ ! -d "$ANDROID_HOME/platforms/android-36" ]; then
             echo "Error: Android SDK platform 36 not found"
-            exit 1
+            # Try to install it again
+            SDK_MANAGER_PATH=""
+            if [ -f "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+              SDK_MANAGER_PATH="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+            elif [ -f "$ANDROID_HOME/cmdline-tools/bin/sdkmanager" ]; then
+              SDK_MANAGER_PATH="$ANDROID_HOME/cmdline-tools/bin/sdkmanager"
+            elif [ -f "$ANDROID_HOME/cmdline-tools/bootstrap-version/bin/sdkmanager" ]; then
+              SDK_MANAGER_PATH="$ANDROID_HOME/cmdline-tools/bootstrap-version/bin/sdkmanager"
+            fi
+            
+            if [ -n "$SDK_MANAGER_PATH" ]; then
+              echo "Trying to install Android SDK platform 36 again..."
+              echo "y" | $SDK_MANAGER_PATH "platforms;android-36" "build-tools;36.0.0"
+            else
+              echo "Cannot find sdkmanager to install platform"
+              exit 1
+            fi
           fi
           
           gomobile bind -v -target=android -androidapi 36 -ldflags "-checklinkname=0" -o build/android/x2j.aar ./android
