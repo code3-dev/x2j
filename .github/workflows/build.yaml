@@ -42,7 +42,7 @@ jobs:
 
   build:
     name: Build for ${{ matrix.target.os }}/${{ matrix.target.arch }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         target:
@@ -53,31 +53,9 @@ jobs:
           - { os: windows, arch: amd64, name: windows-x64, binary: x2j-windows-x64.exe }
           - { os: windows, arch: 386, name: windows-x86, binary: x2j-windows-x86.exe }
           # macOS
-          - { os: macos, arch: amd64, name: macos-x64, binary: x2j-macos-x64 }
-          - { os: macos, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64 }
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        exclude:
-          # Exclude combinations that don't make sense
-          - { target: { os: linux }, os: windows-latest }
-          - { target: { os: linux }, os: macos-latest }
-          - { target: { os: windows }, os: ubuntu-latest }
-          - { target: { os: windows }, os: macos-latest }
-          - { target: { os: macos }, os: ubuntu-latest }
-          - { target: { os: macos }, os: windows-latest }
-        include:
-          # Include specific combinations
-          - target: { os: linux, arch: amd64, name: linux-x64, binary: x2j-linux-x64 }
-            os: ubuntu-latest
-          - target: { os: linux, arch: 386, name: linux-x86, binary: x2j-linux-x86 }
-            os: ubuntu-latest
-          - target: { os: windows, arch: amd64, name: windows-x64, binary: x2j-windows-x64.exe }
-            os: windows-latest
-          - target: { os: windows, arch: 386, name: windows-x86, binary: x2j-windows-x86.exe }
-            os: windows-latest
-          - target: { os: macos, arch: amd64, name: macos-x64, binary: x2j-macos-x64 }
-            os: macos-latest
-          - target: { os: macos, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64 }
-            os: macos-latest
+          - { os: darwin, arch: amd64, name: macos-x64, binary: x2j-macos-x64 }
+          - { os: darwin, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64 }
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -91,29 +69,20 @@ jobs:
       run: |
         echo "GOOS=${{ matrix.target.os }}" >> $GITHUB_ENV
         echo "GOARCH=${{ matrix.target.arch }}" >> $GITHUB_ENV
-      shell: bash
 
     - name: Tidy and verify modules
       run: |
         go mod tidy
         go mod verify
-      shell: bash
 
     - name: Build binary
       run: |
         # Build the application with the correct name
         echo "Building for ${{ matrix.target.name }} (${{ matrix.target.os }}/${{ matrix.target.arch }})"
-        if [ "${{ matrix.target.os }}" = "windows" ]; then
-          # For Windows, we need to handle the extension and CGO
-          CGO_ENABLED=1 GOOS=windows GOARCH=${{ matrix.target.arch }} go build -o ${{ matrix.target.binary }} .
-        else
-          # For other platforms
-          CGO_ENABLED=0 GOOS=${{ matrix.target.os }} GOARCH=${{ matrix.target.arch }} go build -o ${{ matrix.target.binary }} .
-        fi
+        CGO_ENABLED=0 GOOS=${{ matrix.target.os }} GOARCH=${{ matrix.target.arch }} go build -o ${{ matrix.target.binary }} .
         
         # Show file information
         ls -la ${{ matrix.target.binary }}
-      shell: bash
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -247,16 +216,6 @@ jobs:
         mkdir -p build/android
         mkdir -p build/ios
 
-    - name: Build Windows DLLs
-      run: |
-        # Build Windows DLL for x64
-        mkdir -p build/windows/x64
-        CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -o build/windows/x64/x2j.dll -buildmode=c-shared .
-        
-        # Build Windows DLL for x86
-        mkdir -p build/windows/x86
-        CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -v -o build/windows/x86/x2j.dll -buildmode=c-shared .
-
     - name: Upload Android Artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -278,14 +237,6 @@ jobs:
       with:
         name: x2j-ios
         path: build/ios/*
-
-    - name: Upload Windows DLL Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: x2j-windows-dll
-        path: |
-          build/windows/x64/*
-          build/windows/x86/*
 
   release:
     name: Create Release
@@ -327,20 +278,6 @@ jobs:
           mv release-assets/x2j.aar release-assets/x2j-android.aar
         fi
         
-        # Move Windows DLLs from their subdirectories
-        find downloaded-artifacts -path "*/x64/*.dll" -type f -exec cp {} release-assets/x2j-windows-x64.dll \;
-        find downloaded-artifacts -path "*/x86/*.dll" -type f -exec cp {} release-assets/x2j-windows-x86.dll \;
-        
-        # If DLLs don't exist with full path, look for them in any directory
-        find downloaded-artifacts -name "x2j.dll" -type f | while read file; do
-          dir_name=$(dirname "$file")
-          if [[ "$dir_name" == *"/x64"* ]]; then
-            cp "$file" release-assets/x2j-windows-x64.dll
-          elif [[ "$dir_name" == *"/x86"* ]]; then
-            cp "$file" release-assets/x2j-windows-x86.dll
-          fi
-        done
-        
         # List the release assets
         echo "Release assets prepared:"
         ls -la release-assets/
@@ -375,8 +312,6 @@ jobs:
           |----------|-------------|----------|
           | Windows | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x64.exe"><img src="https://img.shields.io/badge/Windows-x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64"></a> |
           | Windows | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x86.exe"><img src="https://img.shields.io/badge/Windows-x86-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x86"></a> |
-          | Windows | DLL x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x64.dll"><img src="https://img.shields.io/badge/Windows-DLL_x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows DLL x64"></a> |
-          | Windows | DLL x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x86.dll"><img src="https://img.shields.io/badge/Windows-DLL_x86-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows DLL x86"></a> |
           | Linux | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x64"><img src="https://img.shields.io/badge/Linux-x64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x64"></a> |
           | Linux | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x86"><img src="https://img.shields.io/badge/Linux-x86-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x86"></a> |
           | macOS | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-x64"><img src="https://img.shields.io/badge/macOS-x64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS x64"></a> |

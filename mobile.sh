@@ -7,9 +7,8 @@ show_menu() {
     echo "===================="
     echo "1) Build Android library"
     echo "2) Build iOS framework"
-    echo "3) Build Windows DLL"
-    echo "4) Build both Android and iOS"
-    echo "5) Exit"
+    echo "3) Build both Android and iOS"
+    echo "4) Exit"
     echo "===================="
 }
 
@@ -78,27 +77,6 @@ build_ios() {
     fi
 }
 
-# Function to build Windows DLL
-build_windows() {
-    echo "Cleaning Windows build directory..."
-    rm -rf build/windows
-    mkdir -p build/windows
-
-    echo "Building Windows DLL..."
-    CGO_ENABLED=1 go build -v \
-        -o build/windows/x2j.dll \
-        -buildmode=c-shared \
-        .
-
-    if [ $? -eq 0 ]; then
-        echo "✅ Windows DLL built successfully at: build/windows/x2j.dll"
-        return 0
-    else
-        echo "❌ Failed to build Windows DLL"
-        return 1
-    fi
-}
-
 # Initialize mobile bind
 init_mobile_bind() {
     echo "Initializing mobile bind..."
@@ -122,14 +100,6 @@ if [ "$GITHUB_ACTIONS" = "true" ]; then
     # Auto mode for CI/CD: build both Android and iOS, then exit
     echo "CI detected: running builds, then exiting."
     
-    # Check if mobile packages exist
-    if ! check_mobile_packages; then
-        echo "No mobile packages found. Skipping mobile builds."
-        echo "Building Windows DLL only."
-        build_windows
-        exit 0
-    fi
-    
     # Initialize mobile bind first to ensure gomobile is available
     init_mobile_bind
     
@@ -140,10 +110,6 @@ if [ "$GITHUB_ACTIONS" = "true" ]; then
     echo "Starting iOS build..."
     build_ios
     ios_result=$?
-    echo ""
-    echo "Starting Windows DLL build..."
-    build_windows
-    windows_result=$?
     echo ""
     echo "===================="
     echo "Build Summary:"
@@ -202,14 +168,6 @@ while true; do
             echo ""
             ;;
         3)
-            echo "Selected: Build Windows DLL"
-            build_windows
-            if [ $? -ne 0 ]; then
-                exit 1
-            fi
-            echo ""
-            ;;
-        4)
             echo "Selected: Build both Android and iOS"
             if ! check_mobile_packages; then
                 echo "No mobile packages found. Skipping mobile builds."

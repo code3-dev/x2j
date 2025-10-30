@@ -148,7 +148,7 @@ The mobile libraries are built using the [mobile.sh](mobile.sh) script which use
 
 The tool can be compiled for:
 - Windows (.exe - x86 and x64)
-- Windows (.dll library - x86 and x64)
+- Windows (x86 and x64)
 - macOS (Darwin)
 - Linux
 - Android (.aar library, .jar library)
@@ -163,15 +163,6 @@ GOOS=windows GOARCH=amd64 go build -o x2j.exe .
 
 # For x86
 GOOS=windows GOARCH=386 go build -o x2j.exe .
-```
-
-### Windows DLL
-```
-# For x64
-GOOS=windows GOARCH=amd64 go build -o x2j.dll -buildmode=c-shared .
-
-# For x86
-GOOS=windows GOARCH=386 go build -o x2j.dll -buildmode=c-shared .
 ```
 
 ### macOS
@@ -198,13 +189,6 @@ GOOS=linux GOARCH=amd64 go build -o x2j .
 # Requires Xcode to be installed
 ./mobile.sh
 # Select option 2 for iOS framework
-```
-
-### Windows DLL (Alternative Method)
-```bash
-# Using the mobile.sh script
-./mobile.sh
-# Select option 3 for Windows DLL (will build for the host architecture)
 ```
 
 ## License
