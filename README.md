@@ -141,26 +141,40 @@ Note: You can rename the executable file to anything for easier usage, for examp
 ## Cross-platform Support
 
 The tool can be compiled for:
-- Windows (.exe)
+- Windows (.exe - x86 and x64)
+- Windows (.dll library - x86 and x64)
 - macOS (Darwin)
 - Linux
-- Android (.aar library)
+- Android (.aar library, .jar library)
 - iOS (.xcframework)
 
 ## Building for Different Platforms
 
-### Windows
-```bash
+### Windows Executable
+```
+# For x64
 GOOS=windows GOARCH=amd64 go build -o x2j.exe .
+
+# For x86
+GOOS=windows GOARCH=386 go build -o x2j.exe .
+```
+
+### Windows DLL
+```
+# For x64
+GOOS=windows GOARCH=amd64 go build -o x2j.dll -buildmode=c-shared .
+
+# For x86
+GOOS=windows GOARCH=386 go build -o x2j.dll -buildmode=c-shared .
 ```
 
 ### macOS
-```bash
+```
 GOOS=darwin GOARCH=amd64 go build -o x2j .
 ```
 
 ### Linux
-```bash
+```
 GOOS=linux GOARCH=amd64 go build -o x2j .
 ```
 
@@ -169,7 +183,7 @@ GOOS=linux GOARCH=amd64 go build -o x2j .
 # Make sure gomobile is installed
 # Requires Android SDK to be installed
 ./mobile.sh
-# Select option 1 for Android library
+# Select option 1 for Android library (AAR and JAR)
 ```
 
 ### iOS
@@ -178,6 +192,13 @@ GOOS=linux GOARCH=amd64 go build -o x2j .
 # Requires Xcode to be installed
 ./mobile.sh
 # Select option 2 for iOS framework
+```
+
+### Windows DLL (Alternative Method)
+```bash
+# Using the mobile.sh script
+./mobile.sh
+# Select option 3 for Windows DLL (will build for the host architecture)
 ```
 
 ## License

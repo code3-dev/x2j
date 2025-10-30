@@ -118,11 +118,23 @@ jobs:
         export GITHUB_ACTIONS=true
         ./mobile.sh <<< "4"
 
-    - name: Upload Android Artifact
+    - name: Build Windows DLLs
+      run: |
+        # Build Windows DLL for x64
+        mkdir -p build/windows/x64
+        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -v -o build/windows/x64/x2j.dll -buildmode=c-shared .
+        
+        # Build Windows DLL for x86
+        mkdir -p build/windows/x86
+        CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -v -o build/windows/x86/x2j.dll -buildmode=c-shared .
+
+    - name: Upload Android Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: x2j-android
-        path: build/android/*
+        path: |
+          build/android/*.aar
+          build/android/*.jar
 
     - name: Package iOS Framework
       run: |
@@ -134,6 +146,14 @@ jobs:
       with:
         name: x2j-ios
         path: build/ios/*
+
+    - name: Upload Windows DLL Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: x2j-windows-dll
+        path: |
+          build/windows/x64/*
+          build/windows/x86/*
 
   release:
     name: Create Release
@@ -168,12 +188,21 @@ jobs:
         done
         
         # Also move mobile artifacts
-        find downloaded-artifacts -name "*.aar" -type f | while read file; do
+        find downloaded-artifacts -name "*.aar" -type f -o -name "*.jar" -type f | while read file; do
           mv "$file" release-assets/
         done
         
         find downloaded-artifacts -name "*.xcframework.zip" -type f | while read file; do
           mv "$file" release-assets/
+        done
+        
+        # Move Windows DLLs
+        find downloaded-artifacts -path "*/x64/*.dll" -type f | while read file; do
+          mv "$file" release-assets/x2j-windows-x64.dll
+        done
+        
+        find downloaded-artifacts -path "*/x86/*.dll" -type f | while read file; do
+          mv "$file" release-assets/x2j-windows-x86.dll
         done
         
         # List the release assets
@@ -210,11 +239,14 @@ jobs:
           |----------|-------------|----------|
           | Windows | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x64.exe"><img src="https://img.shields.io/badge/Windows-x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64"></a> |
           | Windows | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x86.exe"><img src="https://img.shields.io/badge/Windows-x86-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x86"></a> |
+          | Windows | DLL x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x64.dll"><img src="https://img.shields.io/badge/Windows-DLL_x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows DLL x64"></a> |
+          | Windows | DLL x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x86.dll"><img src="https://img.shields.io/badge/Windows-DLL_x86-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows DLL x86"></a> |
           | Linux | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x64"><img src="https://img.shields.io/badge/Linux-x64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x64"></a> |
           | Linux | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x86"><img src="https://img.shields.io/badge/Linux-x86-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x86"></a> |
           | macOS | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-x64"><img src="https://img.shields.io/badge/macOS-x64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS x64"></a> |
           | macOS | ARM64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-arm64"><img src="https://img.shields.io/badge/macOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS ARM64"></a> |
           | Android | AAR | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j.aar"><img src="https://img.shields.io/badge/Android-AAR-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android AAR"></a> |
+          | Android | JAR | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j.jar"><img src="https://img.shields.io/badge/Android-JAR-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android JAR"></a> |
           | iOS | Framework | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/IosX2J.xcframework.zip"><img src="https://img.shields.io/badge/iOS-Framework-000000?style=for-the-badge&logo=apple&logoColor=white" alt="iOS Framework"></a> |
         draft: false
         prerelease: false
