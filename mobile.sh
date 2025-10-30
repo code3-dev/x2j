@@ -103,7 +103,6 @@ build_windows() {
 init_mobile_bind() {
     echo "Initializing mobile bind..."
     go install golang.org/x/mobile/cmd/gomobile@latest
-    go install golang.org/x/mobile/bind@latest
     gomobile init
 }
 

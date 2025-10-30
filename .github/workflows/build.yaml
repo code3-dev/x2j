@@ -97,6 +97,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Install Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
     - name: Install Go
       uses: actions/setup-go@v4
       with:
@@ -105,10 +111,9 @@ jobs:
     - name: Install Android SDK
       uses: malinskiy/action-android/install-sdk@release/0.1.4
 
-    - name: Install gomobile and dependencies
+    - name: Install gomobile
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
-        go install golang.org/x/mobile/bind@latest
         gomobile init
 
     - name: Check if mobile packages exist
