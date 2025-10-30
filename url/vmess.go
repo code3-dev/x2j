@@ -41,7 +41,8 @@ func parseVMessURL(vmessURL string) (*models.V2RayConfig, error) {
 	alterId := getIntValue(rawConfig, "aid", 0)
 	security := getStringValue(rawConfig, "scy", "auto")
 	level := 8
-	
+	remarks := getStringValue(rawConfig, "ps", "") // "ps" is commonly used for remarks in VMess
+
 	// Transport settings
 	net := getStringValue(rawConfig, "net", "tcp")
 	headerType := getStringValue(rawConfig, "type", "")
@@ -87,7 +88,10 @@ func parseVMessURL(vmessURL string) (*models.V2RayConfig, error) {
 	
 	// Set the proxy outbound as the first outbound
 	config.Outbounds = append([]models.OutboundConfig{outbound}, config.Outbounds...)
-	
+
+	// Set remarks in config
+	config.Remarks = remarks
+
 	return config, nil
 }
 

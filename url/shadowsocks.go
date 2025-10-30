@@ -106,9 +106,9 @@ func parseShadowSocksURL(ssURL string) (*models.V2RayConfig, error) {
 	
 	// Set the proxy outbound as the first outbound
 	config.Outbounds = append([]models.OutboundConfig{outbound}, config.Outbounds...)
-	
-	// Set remark in config (if needed for future use)
-	_ = remark
-	
+
+	// Set remark in config
+	config.Remarks = remark
+
 	return config, nil
 }

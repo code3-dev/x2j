@@ -7,6 +7,7 @@ type V2RayConfig struct {
 	Outbounds []OutboundConfig `json:"outbounds"`
 	DNS       DNSConfig       `json:"dns"`
 	Routing   RoutingConfig   `json:"routing"`
+	Remarks   string          `json:"remarks,omitempty"`
 }
 
 // LogConfig represents the logging configuration
