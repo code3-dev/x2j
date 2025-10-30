@@ -220,11 +220,11 @@ jobs:
       run: |
         # Build Windows DLL for x64
         mkdir -p build/windows/x64
-        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -v -o build/windows/x64/x2j.dll -buildmode=c-shared .
+        CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -o build/windows/x64/x2j.dll -buildmode=c-shared .
         
         # Build Windows DLL for x86
         mkdir -p build/windows/x86
-        CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -v -o build/windows/x86/x2j.dll -buildmode=c-shared .
+        CGO_ENABLED=1 GOOS=windows GOARCH=386 go build -v -o build/windows/x86/x2j.dll -buildmode=c-shared .
 
     - name: Upload Android Artifacts
       uses: actions/upload-artifact@v4

@@ -85,7 +85,7 @@ build_windows() {
     mkdir -p build/windows
 
     echo "Building Windows DLL..."
-    go build -v \
+    CGO_ENABLED=1 go build -v \
         -o build/windows/x2j.dll \
         -buildmode=c-shared \
         .
