@@ -2,6 +2,7 @@
 package android
 
 import (
+	_ "golang.org/x/mobile/bind"
 	"encoding/json"
 	"pira/x2j/url"
 )
