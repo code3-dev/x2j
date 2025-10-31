@@ -21,8 +21,13 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 1. Install Go 1.25.0 or later
 2. Clone this repository
+   ```bash
+   git clone https://github.com/code3-dev/x2j.git
+   cd x2j
+   ```
 3. Build the tool:
    ```bash
+   go mod tidy
    go build -o x2j .
    ```
 

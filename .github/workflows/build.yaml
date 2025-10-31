@@ -47,14 +47,14 @@ jobs:
       matrix:
         target:
           # Linux
-          - { os: linux, arch: amd64, name: linux-x64, binary: x2j-linux-x64 }
-          - { os: linux, arch: 386, name: linux-x86, binary: x2j-linux-x86 }
+          - { os: linux, arch: amd64, name: linux-x64, binary: x2j-linux-x64, final_binary: x2j }
+          - { os: linux, arch: 386, name: linux-x86, binary: x2j-linux-x86, final_binary: x2j }
           # Windows
-          - { os: windows, arch: amd64, name: windows-x64, binary: x2j-windows-x64.exe }
-          - { os: windows, arch: 386, name: windows-x86, binary: x2j-windows-x86.exe }
+          - { os: windows, arch: amd64, name: windows-x64, binary: x2j-windows-x64.exe, final_binary: x2j.exe }
+          - { os: windows, arch: 386, name: windows-x86, binary: x2j-windows-x86.exe, final_binary: x2j.exe }
           # macOS
-          - { os: darwin, arch: amd64, name: macos-x64, binary: x2j-macos-x64 }
-          - { os: darwin, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64 }
+          - { os: darwin, arch: amd64, name: macos-x64, binary: x2j-macos-x64, final_binary: x2j }
+          - { os: darwin, arch: arm64, name: macos-arm64, binary: x2j-macos-arm64, final_binary: x2j }
 
     steps:
     - name: Checkout code
@@ -84,11 +84,31 @@ jobs:
         # Show file information
         ls -la ${{ matrix.target.binary }}
 
+    - name: Rename binary and create ZIP archive
+      run: |
+        # Rename the binary to the final name
+        mv ${{ matrix.target.binary }} ${{ matrix.target.final_binary }}
+        
+        # Create ZIP archive containing the binary and README.md
+        if [[ "${{ matrix.target.os }}" == "windows" ]]; then
+          # On Windows, we need to use 7z or PowerShell for ZIP creation
+          # But in Ubuntu runner, we can use zip command
+          zip x2j-${{ matrix.target.name }}.zip ${{ matrix.target.final_binary }} README.md LICENSE
+        else
+          # On Linux and macOS
+          zip x2j-${{ matrix.target.name }}.zip ${{ matrix.target.final_binary }} README.md LICENSE
+        fi
+        
+        # Show the created ZIP file
+        ls -la x2j-${{ matrix.target.name }}.zip
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: x2j-${{ matrix.target.name }}
-        path: ${{ matrix.target.binary }}
+        path: |
+          x2j-${{ matrix.target.name }}.zip
+          ${{ matrix.target.final_binary }}
 
   mobile-build:
     name: Build Mobile Libraries
@@ -309,8 +329,8 @@ jobs:
         # Create a directory for all release assets
         mkdir -p release-assets
         
-        # Move all binaries from downloaded artifact directories to the release-assets directory
-        find downloaded-artifacts -name "x2j-*" -type f -exec mv {} release-assets/ \;
+        # Move ZIP files from downloaded artifact directories to the release-assets directory
+        find downloaded-artifacts -name "x2j-*.zip" -type f -exec mv {} release-assets/ \;
         
         # Also move mobile artifacts
         find downloaded-artifacts -name "*.aar" -type f -exec mv {} release-assets/ \;
@@ -351,6 +371,7 @@ jobs:
           ```bash
           git clone https://github.com/code3-dev/x2j.git
           cd x2j
+          go mod tidy
           go build .
           ./x2j  # or ./x2j.exe on Windows
           ```
@@ -359,12 +380,12 @@ jobs:
 
           | Platform | Architecture | Download |
           |----------|-------------|----------|
-          | Windows | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x64.exe"><img src="https://img.shields.io/badge/Windows-x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64"></a> |
-          | Windows | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x86.exe"><img src="https://img.shields.io/badge/Windows-x86-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x86"></a> |
-          | Linux | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x64"><img src="https://img.shields.io/badge/Linux-x64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x64"></a> |
-          | Linux | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x86"><img src="https://img.shields.io/badge/Linux-x86-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x86"></a> |
-          | macOS | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-x64"><img src="https://img.shields.io/badge/macOS-x64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS x64"></a> |
-          | macOS | ARM64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-arm64"><img src="https://img.shields.io/badge/macOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS ARM64"></a> |
+          | Windows | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x64.zip"><img src="https://img.shields.io/badge/Windows-x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64"></a> |
+          | Windows | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-windows-x86.zip"><img src="https://img.shields.io/badge/Windows-x86-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x86"></a> |
+          | Linux | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x64.zip"><img src="https://img.shields.io/badge/Linux-x64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x64"></a> |
+          | Linux | x86 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-linux-x86.zip"><img src="https://img.shields.io/badge/Linux-x86-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux x86"></a> |
+          | macOS | x64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-x64.zip"><img src="https://img.shields.io/badge/macOS-x64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS x64"></a> |
+          | macOS | ARM64 | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-macos-arm64.zip"><img src="https://img.shields.io/badge/macOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS ARM64"></a> |
           | Android | AAR | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j-android.aar"><img src="https://img.shields.io/badge/Android-AAR-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android AAR"></a> |
           | Android | JAR | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/x2j.jar"><img src="https://img.shields.io/badge/Android-JAR-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android JAR"></a> |
           | iOS | Framework | <a href="https://github.com/code3-dev/x2j/releases/download/${{ env.TAG_NAME }}/IosX2J.xcframework.zip"><img src="https://img.shields.io/badge/iOS-Framework-000000?style=for-the-badge&logo=apple&logoColor=white" alt="iOS Framework"></a> |
