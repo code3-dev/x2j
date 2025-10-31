@@ -1,46 +1,135 @@
-import Foundation
-// Import the generated Go library
-// After building with gomobile, this will be the actual import:
+import SwiftUI
 import IosX2J
 
-// iOS Example for using the X2J library
-class IOSExample {
-    private let tag = "X2JExample"
+struct ContentView: View {
+    @State private var v2rayURL: String = "vmess://eyJhZGQiOiJleGFtcGxlLmNvbSIsInBvcnQiOiI0NDMifQ=="
+    @State private var port: String = "1080"
+    @State private var dns: String = "1.1.1.1, 8.8.8.8"
+    @State private var remarks: String = "Example Proxy Configuration"
+    @State private var result: String = ""
+    @State private var showAlert = false
+    @State private var alertMessage = ""
     
-    func runExamples() {
-        // Example V2Ray URL (replace with a valid one)
-        let v2rayURL = "vmess://eyJhZGQiOiIxMzkuMTY1LjE4Ni4xMzciLCJhaWQiOiI2NCIsImhvc3QiOiJ2MnVzMDEuaXN4Lnl0IiwiaWQiOiJjNWM1NmQ4NC0zYjQ5LTRhZTktYjNmYS00OWY2ZWM3YjVlMzQiLCJuZXQiOiJ3cyIsInBhdGgiOiJcL3JheSIsInBvcnQiOiI0NDMiLCJwcyI6Ilx1ZDgzY1x1ZGRlOVx1ZDgzY1x1ZGRlYSBXVyIsInNjeSI6ImF1dG8iLCJzbmkiOiIiLCJ0bHMiOiJ0bHMiLCJ0eXBlIjoiIiwidiI6IjIifQ=="
-        
-        // Example 1: Basic usage with default settings
-        convertV2RayURL(v2rayURL: v2rayURL)
-        
-        // Example 2: With custom settings
-        convertV2RayURLWithCustomSettings(v2rayURL: v2rayURL)
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("V2Ray URL")
+                    .font(.headline)
+                TextEditor(text: $v2rayURL)
+                    .frame(height: 100)
+                    .border(Color.gray.opacity(0.2))
+                
+                Text("Port")
+                    .font(.headline)
+                TextField("Enter port number", text: $port)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                Text("DNS Servers")
+                    .font(.headline)
+                TextField("Enter DNS servers (comma separated)", text: $dns)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                Text("Remarks (Optional)")
+                    .font(.headline)
+                TextField("Enter remarks/comments for this configuration", text: $remarks)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                Button(action: {
+                    convertWithDefaultSettings()
+                }) {
+                    Text("Convert with Default Settings")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                
+                Button(action: {
+                    convertWithCustomSettings()
+                }) {
+                    Text("Convert with Custom Settings")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                
+                if !result.isEmpty {
+                    Text("Result")
+                        .font(.headline)
+                    Text(result)
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+                }
+            }
+            .padding()
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text("Error"),
+                  message: Text(alertMessage),
+                  dismissButton: .default(Text("OK")))
+        }
     }
     
-    private func convertV2RayURL(v2rayURL: String) {
+    private func convertWithDefaultSettings() {
+        guard !v2rayURL.isEmpty else {
+            showError("Please enter a V2Ray URL")
+            return
+        }
+        
         do {
-            // Basic conversion with default settings (port 1080, default DNS)
             let jsonConfig = try IosX2J.ParseV2RayURL(v2rayURL)
-            print("\(tag): Generated JSON config: \(jsonConfig)")
-            
-            // In a real implementation, you would use the result here
-            // For example, save to file or pass to V2Ray core
-            print("\(tag): Converted V2Ray URL to JSON with default settings")
+            result = jsonConfig
+            print("Successfully converted V2Ray URL to JSON with default settings")
         } catch {
-            print("\(tag): Error converting V2Ray URL: \(error.localizedDescription)")
+            handleError("Error converting V2Ray URL", error: error)
         }
     }
     
-    private func convertV2RayURLWithCustomSettings(v2rayURL: String) {
-        do {
-            // Conversion with custom port and DNS
-            let jsonConfig = try IosX2J.ParseV2RayURLWithSettings(v2rayURL, 1081, "1.1.1.1, 8.8.8.8")
-            print("\(tag): Generated JSON config with custom settings: \(jsonConfig)")
-            
-            print("\(tag): Converted V2Ray URL to JSON with custom port (1081) and DNS (1.1.1.1, 8.8.8.8)")
-        } catch {
-            print("\(tag): Error converting V2Ray URL with custom settings: \(error.localizedDescription)")
+    private func convertWithCustomSettings() {
+        guard !v2rayURL.isEmpty else {
+            showError("Please enter a V2Ray URL")
+            return
         }
+        
+        guard !port.isEmpty, let portNumber = Int32(port) else {
+            showError("Please enter a valid port number")
+            return
+        }
+        
+        guard !dns.isEmpty else {
+            showError("Please enter DNS servers")
+            return
+        }
+        
+        do {
+            let jsonConfig = try IosX2J.ParseV2RayURLWithSettings(v2rayURL, portNumber, dns, remarks)
+            result = jsonConfig
+            print("Successfully converted V2Ray URL to JSON with custom settings")
+        } catch {
+            handleError("Error converting V2Ray URL with custom settings", error: error)
+        }
+    }
+    
+    private func handleError(_ message: String, error: Error) {
+        print("\(message): \(error.localizedDescription)")
+        showError("\(message): \(error.localizedDescription)")
+    }
+    
+    private func showError(_ message: String) {
+        alertMessage = message
+        showAlert = true
     }
 }
+
+#if DEBUG
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
+#endif

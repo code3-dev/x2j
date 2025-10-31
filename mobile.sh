@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Exit on any error
+set -e
+
 # Function to display menu
 show_menu() {
     echo "===================="
@@ -20,6 +23,18 @@ check_mobile_packages() {
     return 0
 }
 
+# Function to check Go version
+check_go_version() {
+    required_version="1.16"
+    current_version=$(go version | grep -oE 'go[0-9]+\.[0-9]+' | grep -oE '[0-9]+\.[0-9]+')
+    
+    if [ "$(printf '%s\n' "$required_version" "$current_version" | sort -V | head -n1)" != "$required_version" ]; then
+        echo "❌ Error: Go version $required_version or higher is required (current: $current_version)"
+        return 1
+    fi
+    return 0
+}
+
 # Function to build Android library
 build_android() {
     # Check if android directory exists
@@ -33,10 +48,11 @@ build_android() {
     mkdir -p build/android
     
     echo "Building Android library..."
-    gomobile bind -v \
+    # Add -x flag for verbose output and better debugging
+    gomobile bind -v -x \
         -target=android \
         -androidapi 35 \
-        -ldflags "-checklinkname=0" \
+        -ldflags "-w -s" \
         -o build/android/x2j.aar \
         ./android
     
@@ -51,9 +67,21 @@ build_android() {
 
 # Function to build iOS framework
 build_ios() {
+    # Check if running on macOS
+    if [ "$(uname)" != "Darwin" ]; then
+        echo "❌ iOS builds are only supported on macOS"
+        return 1
+    }
+    
     # Check if ios directory exists
     if [ ! -d "ios" ]; then
         echo "❌ iOS directory not found. Skipping iOS build."
+        return 1
+    }
+    
+    # Check if Xcode is installed
+    if ! command -v xcodebuild &> /dev/null; then
+        echo "❌ Xcode is required for iOS builds but was not found"
         return 1
     fi
     
@@ -62,9 +90,10 @@ build_ios() {
     mkdir -p build/ios
     
     echo "Building iOS framework..."
-    gomobile bind -v \
+    # Add -x flag for verbose output and better debugging
+    gomobile bind -v -x \
         -target=ios \
-        -ldflags "-checklinkname=0" \
+        -ldflags "-w -s" \
         -o build/ios/IosX2J.xcframework \
         ./ios
     
@@ -80,10 +109,32 @@ build_ios() {
 # Initialize mobile bind
 init_mobile_bind() {
     echo "Initializing mobile bind..."
+    
+    # Check Go version first
+    if ! check_go_version; then
+        exit 1
+    fi
+    
+    # Ensure modules are up to date
+    echo "Updating Go modules..."
     go mod download
     go mod tidy
+    
+    # Install/update gomobile
+    echo "Installing/updating gomobile..."
     go install golang.org/x/mobile/cmd/gomobile@latest
+    
+    # Initialize gomobile
+    echo "Initializing gomobile..."
     gomobile init
+    
+    # Verify gomobile installation
+    if ! command -v gomobile &> /dev/null; then
+        echo "❌ Failed to install gomobile"
+        exit 1
+    fi
+    
+    echo "✅ Mobile bind initialized successfully"
 }
 
 # Setup Android SDK for CI environments
@@ -107,29 +158,38 @@ if [ "$GITHUB_ACTIONS" = "true" ]; then
     build_android
     android_result=$?
     echo ""
-    echo "Starting iOS build..."
-    build_ios
-    ios_result=$?
+    
+    # Only attempt iOS build on macOS
+    if [ "$(uname)" = "Darwin" ]; then
+        echo "Starting iOS build..."
+        build_ios
+        ios_result=$?
+    else
+        echo "Skipping iOS build (not on macOS)"
+        ios_result=0
+    fi
+    
     echo ""
     echo "===================="
     echo "Build Summary:"
     if [ $android_result -eq 0 ]; then
         echo "✅ Android: SUCCESS"
     else
-        echo "❌ Android: FAILED (or skipped)"
+        echo "❌ Android: FAILED"
     fi
-    if [ $ios_result -eq 0 ]; then
-        echo "✅ iOS: SUCCESS"
+    
+    if [ "$(uname)" = "Darwin" ]; then
+        if [ $ios_result -eq 0 ]; then
+            echo "✅ iOS: SUCCESS"
+        else
+            echo "❌ iOS: FAILED"
+        fi
     else
-        echo "❌ iOS: FAILED (or skipped)"
-    fi
-    if [ $windows_result -eq 0 ]; then
-        echo "✅ Windows: SUCCESS"
-    else
-        echo "❌ Windows: FAILED"
+        echo "⏭️ iOS: SKIPPED (not on macOS)"
     fi
     echo "===================="
-    if [ $windows_result -ne 0 ]; then
+    
+    if [ $android_result -ne 0 ] || [ $ios_result -ne 0 ]; then
         exit 1
     fi
     exit 0
@@ -138,7 +198,7 @@ fi
 # Interactive mode
 while true; do
     show_menu
-    read -p "Please select an option (1-5): " choice
+    read -p "Please select an option (1-4): " choice
     
     case $choice in
         1)
@@ -156,6 +216,10 @@ while true; do
             ;;
         2)
             echo "Selected: Build iOS framework"
+            if [ "$(uname)" != "Darwin" ]; then
+                echo "❌ iOS builds are only supported on macOS"
+                exit 1
+            fi
             if ! check_mobile_packages; then
                 echo "No mobile packages found. Skipping iOS build."
             else
@@ -179,9 +243,14 @@ while true; do
                 android_result=$?
                 
                 echo ""
-                echo "Starting iOS build..."
-                build_ios
-                ios_result=$?
+                if [ "$(uname)" = "Darwin" ]; then
+                    echo "Starting iOS build..."
+                    build_ios
+                    ios_result=$?
+                else
+                    echo "Skipping iOS build (not on macOS)"
+                    ios_result=0
+                fi
                 
                 echo ""
                 echo "===================="
@@ -189,25 +258,32 @@ while true; do
                 if [ $android_result -eq 0 ]; then
                     echo "✅ Android: SUCCESS"
                 else
-                    echo "❌ Android: FAILED (or skipped)"
+                    echo "❌ Android: FAILED"
                 fi
                 
-                if [ $ios_result -eq 0 ]; then
-                    echo "✅ iOS: SUCCESS"
+                if [ "$(uname)" = "Darwin" ]; then
+                    if [ $ios_result -eq 0 ]; then
+                        echo "✅ iOS: SUCCESS"
+                    else
+                        echo "❌ iOS: FAILED"
+                    fi
                 else
-                    echo "❌ iOS: FAILED (or skipped)"
+                    echo "⏭️ iOS: SKIPPED (not on macOS)"
                 fi
                 echo "===================="
                 
-                if [ $android_result -ne 0 ] && [ $ios_result -ne 0 ]; then
+                if [ $android_result -ne 0 ] || [ $ios_result -ne 0 ]; then
                     exit 1
                 fi
             fi
             echo ""
             ;;
-        *)
+        4)
             echo "Exiting..."
             exit 0
+            ;;
+        *)
+            echo "Invalid option. Please try again."
             ;;
     esac
 done

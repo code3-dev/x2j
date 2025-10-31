@@ -1,65 +1,128 @@
-# iOS Integration Guide for X2J Library
+# X2J iOS Example
 
-This guide explains how to integrate the X2J iOS library (built using mobile.sh) into your iOS application.
+This example demonstrates how to use the X2J library in an iOS application to convert V2Ray URLs to JSON configurations. The example is built using SwiftUI for a modern, declarative UI implementation.
 
-## Library Build Process
+## Prerequisites
 
-The X2J iOS library is built as an XCFramework using the gomobile tool:
-```bash
-./mobile.sh
-# Select option 2 for iOS framework
-```
+- Xcode 13.0 or higher
+- iOS 14.0 or higher (for SwiftUI 2.0 features)
+- Go 1.16 or higher
+- Gomobile tools
+- macOS (required for iOS development)
 
-This creates `build/ios/IosX2J.xcframework` which can be integrated into your iOS project.
+## Setup
+
+1. Install Go and set up your Go environment:
+   ```bash
+   # Install Go (if not already installed)
+   # Visit https://golang.org/dl/ and follow installation instructions
+   ```
+
+2. Install Gomobile tools:
+   ```bash
+   go install golang.org/x/mobile/cmd/gomobile@latest
+   gomobile init
+   ```
+
+3. Build the X2J iOS framework:
+   ```bash
+   # From the project root directory
+   ./mobile.sh
+   # Select option 2 to build iOS framework
+   ```
+
+   This will generate `IosX2J.xcframework` in the `build/ios` directory.
+
+## Project Structure
+
+- `IOSExample.swift` - SwiftUI view demonstrating library usage
+- `IosX2J.xcframework` - The compiled Go library (generated during build)
 
 ## Integration Steps
 
-1. **Add the framework to your project:**
-   - Drag and drop `IosX2J.xcframework` into your Xcode project
-   - Or add it through Xcode's "Frameworks, Libraries, and Embedded Content" section
+1. Add the XCFramework to your Xcode project:
+   - Drag `IosX2J.xcframework` into your Xcode project
+   - In your target's settings, under "General" > "Frameworks, Libraries, and Embedded Content":
+     - Ensure `IosX2J.xcframework` is listed
+     - Set "Embed & Sign" as the embedding option
 
-2. **Import the module in your Swift files:**
+2. Import the framework in your Swift code:
    ```swift
    import IosX2J
    ```
 
-## Usage in Swift Code
+3. Use the library functions:
+   ```swift
+   // Basic usage
+   let jsonConfig = try IosX2J.ParseV2RayURL(v2rayURL)
 
-After building the library with gomobile, you can use it in your iOS application as follows:
+   // With custom settings
+   let jsonConfig = try IosX2J.ParseV2RayURLWithSettings(v2rayURL, port, dns)
+   
+   // With custom settings including remarks
+   let jsonConfig = try IosX2J.ParseV2RayURLWithSettings(v2rayURL, port, dns, remarks)
+   ```
 
-```swift
-import IosX2J
+## Example Features
 
-// Basic conversion with default settings (port 1080, default DNS)
-do {
-    let jsonConfig = try IosX2J.ParseV2RayURL(v2rayURL)
-    // Use the JSON configuration
-} catch {
-    // Handle error
-}
+The example application demonstrates:
+- Modern SwiftUI implementation
+- Converting V2Ray URLs with default settings
+- Converting V2Ray URLs with custom port and DNS settings
+- Converting V2Ray URLs with remarks/comments
+- Proper error handling and user feedback
+- Input validation
+- Responsive UI design
 
-// Conversion with custom port and DNS
-do {
-    let jsonConfig = try IosX2J.ParseV2RayURLWithSettings(v2rayURL, 1081, "1.1.1.1, 8.8.8.8")
-    // Use the JSON configuration
-} catch {
-    // Handle error
-}
-```
+## Building and Running
 
-## Parameters
+1. Open the Xcode project
+2. Select your target device or simulator
+3. Build and run the application
 
-- `v2rayURL`: The V2Ray URL to convert (supports VMess, VLESS, Trojan, Shadowsocks)
-- `port`: Custom port for inbound proxy (default: 1080)
-- `dns`: Custom DNS servers as comma-separated string (default: "1.1.1.1, 1.0.0.1, 8.8.8.8, 8.8.4.4")
+## Error Handling
 
-## Supported Protocols
+The example shows proper error handling for:
+- Invalid V2Ray URLs
+- Invalid port numbers
+- Missing required fields
+- Conversion failures
+- Network-related errors
 
-- VMess
-- VLESS
-- Trojan
-- Shadowsocks
+## SwiftUI Implementation Details
 
-## Example Output
+The example uses modern SwiftUI features:
+- `@State` for managing view state
+- Custom styling and layout
+- Alert presentation
+- Form validation
+- Error presentation
+- Preview support
 
-The library will generate a properly formatted Xray JSON configuration that can be used directly with V2Ray/Xray core.
+## Best Practices
+
+- Validate all user inputs
+- Provide clear error messages
+- Use Swift's error handling mechanisms
+- Follow iOS Human Interface Guidelines
+- Implement proper state management
+- Use SwiftUI previews for development
+
+## Troubleshooting
+
+Common issues and solutions:
+1. Framework not found:
+   - Ensure the framework is properly embedded in your target
+   - Clean and rebuild the project
+
+2. Build errors:
+   - Verify Xcode and iOS deployment target versions
+   - Ensure all required dependencies are installed
+
+3. Runtime errors:
+   - Check debug console for detailed error messages
+   - Verify input format and requirements
+
+## License
+
+This example is part of the X2J project and is licensed under the same terms as the main project.

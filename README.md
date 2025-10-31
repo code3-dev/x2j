@@ -45,6 +45,9 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 # Set custom DNS servers
 ./x2j -u <v2ray_link> -d "1.1.1.1, 1.0.0.1"
+
+# Add remarks/comments to the configuration
+./x2j -u <v2ray_link> -r "My Proxy Configuration"
 ```
 
 ### Command Examples
@@ -88,6 +91,12 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 # Save in json file with parent directory path
 ./x2j -u <v2ray link> -o ../files/out.json
+
+# Save in json file with remarks
+./x2j -u <v2ray link> -o out.json -r "Office Proxy"
+
+# Save in json file with custom port, DNS and remarks
+./x2j -u <v2ray link> -o out.json -p 10809 -d "1.1.1.1, 1.0.0.1" -r "Home Proxy"
 ```
 
 Note: You can rename the executable file to anything for easier usage, for example: `./myapp -u <v2ray link> -o out.json`
@@ -125,6 +134,11 @@ For developers integrating x2j into mobile applications, check out our platform-
 - [iOS Integration Guide](ios/example) - Instructions for integrating the X2J iOS framework (XCFramework) into iOS applications
 
 The mobile libraries are built using the [mobile.sh](mobile.sh) script which uses gomobile to create native libraries for each platform. The actual class and function names in the generated libraries follow gomobile's naming conventions based on the Go package and function names.
+
+Note: 
+- Go Mobile runs on the same architectures as Go, which currently means ARM, ARM64, 386 and amd64 devices and emulators. Notably, Android on MIPS devices is not yet supported.
+- Target=ios requires the host machine to be running macOS.
+- As of Go 1.5, only darwin/amd64 works on the iOS simulator.
 
 ## Supported Protocols
 

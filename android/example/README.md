@@ -1,75 +1,103 @@
-# Android Integration Guide for X2J Library
+# X2J Android Example
 
-This guide explains how to integrate the X2J Android library (built using mobile.sh) into your Android application.
+This example demonstrates how to use the X2J library in an Android application to convert V2Ray URLs to JSON configurations.
 
-## Library Build Process
+## Prerequisites
 
-The X2J Android library is built as an AAR file using the gomobile tool:
-```bash
-./mobile.sh
-# Select option 1 for Android library
-```
+- Android Studio 4.0 or higher
+- Android SDK API level 35 or higher
+- Go 1.16 or higher
+- Gomobile tools
 
-This creates `build/android/x2j.aar` which can be integrated into your Android project.
+## Setup
+
+1. Install Go and set up your Go environment:
+   ```bash
+   # Install Go (if not already installed)
+   # Visit https://golang.org/dl/ and follow installation instructions
+   ```
+
+2. Install Gomobile tools:
+   ```bash
+   go install golang.org/x/mobile/cmd/gomobile@latest
+   gomobile init
+   ```
+
+3. Build the X2J Android library:
+   ```bash
+   # From the project root directory
+   ./mobile.sh
+   # Select option 1 to build Android library
+   ```
+
+   This will generate `x2j.aar` in the `build/android` directory.
+
+## Project Structure
+
+- `AndroidExample.java` - Main activity demonstrating library usage
+- `activity_main.xml` - Layout file for the example UI
+- `x2j.aar` - The compiled Go library (generated during build)
 
 ## Integration Steps
 
-1. **Add the AAR to your project:**
+1. Add the AAR dependency to your Android project:
    - Copy `x2j.aar` to your app's `libs` directory
    - Add the following to your app's `build.gradle`:
-   ```gradle
-   dependencies {
-       implementation files('libs/x2j.aar')
-   }
+     ```gradle
+     dependencies {
+         implementation files('libs/x2j.aar')
+     }
+     ```
+
+2. Import the Go package in your Java code:
+   ```java
+   import go.android.Android;
    ```
 
-2. **Add required dependencies:**
-   ```gradle
-   dependencies {
-       implementation 'com.google.code.gson:gson:2.8.9'
-   }
+3. Use the library functions:
+   ```java
+   // Basic usage
+   String jsonConfig = Android.ParseV2RayURL(v2rayURL);
+
+   // With custom settings
+   String jsonConfig = Android.ParseV2RayURLWithSettings(v2rayURL, port, dns);
+   
+   // With custom settings including remarks
+   String jsonConfig = Android.ParseV2RayURLWithSettings(v2rayURL, port, dns, remarks);
    ```
 
-3. **Sync your project** to import the library
+## Example Features
 
-## Usage in Android Code
+The example application demonstrates:
+- Converting V2Ray URLs with default settings
+- Converting V2Ray URLs with custom port and DNS settings
+- Converting V2Ray URLs with remarks/comments
+- Proper error handling
+- User-friendly UI for input and display
+- Input validation
 
-After building the library with gomobile, you can use it in your Android application as follows:
+## Building and Running
 
-```java
-// Import the generated Go library
-import go.android.Android;
+1. Open the project in Android Studio
+2. Sync project with Gradle files
+3. Build and run on your device or emulator
 
-// Basic conversion with default settings (port 1080, default DNS)
-try {
-    String jsonConfig = Android.parseV2RayURL(v2rayURL);
-    // Use the JSON configuration
-} catch (Exception e) {
-    // Handle error
-}
+## Error Handling
 
-// Conversion with custom port and DNS
-try {
-    String jsonConfig = Android.parseV2RayURLWithSettings(v2rayURL, 1081, "1.1.1.1, 8.8.8.8");
-    // Use the JSON configuration
-} catch (Exception e) {
-    // Handle error
-}
-```
+The example shows proper error handling for:
+- Invalid V2Ray URLs
+- Invalid port numbers
+- Missing required fields
+- Conversion failures
 
-## Parameters
+## Best Practices
 
-- `v2rayURL`: The V2Ray URL to convert (supports VMess, VLESS, Trojan, Shadowsocks)
-- `port`: Custom port for inbound proxy (default: 1080)
-- `dns`: Custom DNS servers as comma-separated string (default: "1.1.1.1, 1.0.0.1, 8.8.8.8, 8.8.4.4")
+- Always validate user input
+- Handle all possible exceptions
+- Provide clear feedback to users
+- Use async operations for long-running tasks
+- Follow Android UI guidelines
 
-## Supported Protocols
+## License
 
-- VMess
-- VLESS
-- Trojan
-- Shadowsocks
-
-## Example Output
-
-The library will generate a properly formatted Xray JSON configuration that can be used directly with V2Ray/Xray core.
+This example is part of the X2J project and is licensed under the same terms as the main project.

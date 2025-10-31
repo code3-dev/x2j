@@ -17,13 +17,14 @@ func main() {
 	console := flag.Bool("c", false, "Show JSON in console")
 	port := flag.Int("p", 1080, "Custom port for inbound proxy (default: 1080)")
 	dns := flag.String("d", "", "Custom DNS servers (comma-separated, e.g. \"1.1.1.1, 1.0.0.1\")")
+	remarks := flag.String("r", "", "Remarks/Comments for the configuration (optional)")
 
 	flag.Parse()
 
 	// Check if URL is provided
 	if *v2rayURL == "" {
 		fmt.Println("Error: V2Ray URL is required")
-		fmt.Println("Usage: ./x2j -u <v2ray_url> [-o output.json] [-c] [-p port] [-d dns_servers]")
+		fmt.Println("Usage: ./x2j -u <v2ray_url> [-o output.json] [-c] [-p port] [-d dns_servers] [-r remarks]")
 		os.Exit(1)
 	}
 
@@ -58,6 +59,11 @@ func main() {
 			}
 			config.DNS.Servers = dnsServers
 		}
+	}
+
+	// Set remarks if provided
+	if *remarks != "" {
+		config.Remarks = *remarks
 	}
 
 	// Format the JSON output
