@@ -123,6 +123,7 @@ init_mobile_bind() {
     # Install/update gomobile
     echo "Installing/updating gomobile..."
     go install golang.org/x/mobile/cmd/gomobile@latest
+    go install golang.org/x/mobile/bind/...
     
     # Initialize gomobile
     echo "Initializing gomobile..."
