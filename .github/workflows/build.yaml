@@ -150,17 +150,17 @@ jobs:
         go mod tidy
         go mod download
 
-    - name: Install gomobile with bind package
+    - name: Install gomobile
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
-        go install golang.org/x/mobile/bind@latest
         gomobile init
         # Verify gomobile installation
         gomobile version
 
     - name: Verify mobile bind dependency
       run: |
-        go list golang.org/x/mobile/bind
+        go mod download
+        go mod tidy
 
     - name: Check if mobile packages exist
       id: check_mobile
@@ -258,10 +258,9 @@ jobs:
         go mod tidy
         go mod download
 
-    - name: Install gomobile with bind package
+    - name: Install gomobile
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
-        go install golang.org/x/mobile/bind@latest
         gomobile init
         # Verify gomobile installation
         gomobile version

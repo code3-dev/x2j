@@ -124,10 +124,6 @@ init_mobile_bind() {
     echo "Installing/updating gomobile..."
     go install golang.org/x/mobile/cmd/gomobile@latest
     
-    # Install the mobile bind package explicitly
-    echo "Installing mobile bind package..."
-    go install golang.org/x/mobile/bind@latest
-    
     # Initialize gomobile
     echo "Initializing gomobile..."
     gomobile init
