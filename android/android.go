@@ -6,6 +6,7 @@
 package android
 
 import (
+	_ "golang.org/x/mobile/bind"
 	"encoding/json"
 	"fmt"
 	"strings"
