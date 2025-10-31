@@ -117,12 +117,16 @@ init_mobile_bind() {
     
     # Ensure modules are up to date
     echo "Updating Go modules..."
-    go mod download
     go mod tidy
+    go mod download
     
     # Install/update gomobile
     echo "Installing/updating gomobile..."
     go install golang.org/x/mobile/cmd/gomobile@latest
+    
+    # Install the mobile bind package explicitly
+    echo "Installing mobile bind package..."
+    go install golang.org/x/mobile/bind@latest
     
     # Initialize gomobile
     echo "Initializing gomobile..."

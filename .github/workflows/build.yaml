@@ -147,12 +147,13 @@ jobs:
 
     - name: Download Go dependencies
       run: |
-        go mod download
         go mod tidy
+        go mod download
 
-    - name: Install gomobile
+    - name: Install gomobile with bind package
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
+        go install golang.org/x/mobile/bind@latest
         gomobile init
         # Verify gomobile installation
         gomobile version
@@ -254,12 +255,13 @@ jobs:
 
     - name: Download Go dependencies
       run: |
-        go mod download
         go mod tidy
+        go mod download
 
-    - name: Install gomobile
+    - name: Install gomobile with bind package
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
+        go install golang.org/x/mobile/bind@latest
         gomobile init
         # Verify gomobile installation
         gomobile version
