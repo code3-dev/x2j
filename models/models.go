@@ -73,7 +73,9 @@ type MuxConfig struct {
 
 // DNSConfig represents DNS configuration
 type DNSConfig struct {
-	Servers []string `json:"servers"`
+	Servers interface{} `json:"servers,omitempty"`
+	Hosts  interface{} `json:"hosts,omitempty"`
+	Tag    string      `json:"tag,omitempty"`
 }
 
 // RoutingConfig represents routing configuration

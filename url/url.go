@@ -279,28 +279,48 @@ func populateTransportSettings(streamSetting *models.StreamSettings, transport, 
 func populateTLSSettings(streamSetting *models.StreamSettings, streamSecurity string, allowInsecure bool, sni, fingerprint, alpns, publicKey, shortId, spiderX string) {
 	streamSetting.Security = streamSecurity
 	
-	tlsSetting := map[string]interface{}{
-		"allowInsecure": allowInsecure,
-		"serverName":    sni,
-	}
-	
-	if alpns != "" {
-		tlsSetting["alpn"] = []string{alpns}
-	}
-	
-	if fingerprint != "" {
-		tlsSetting["fingerprint"] = fingerprint
-	}
-	
 	if streamSecurity == "tls" {
-		streamSetting.RealitySettings = nil
-		streamSetting.TLSSettings = tlsSetting
-	} else if streamSecurity == "reality" {
-		tlsSetting["publicKey"] = publicKey
-		tlsSetting["shortId"] = shortId
-		tlsSetting["spiderX"] = spiderX
+		tlsSetting := map[string]interface{}{
+			"allowInsecure": allowInsecure,
+			"serverName":    sni,
+		}
 		
+		if alpns != "" {
+			tlsSetting["alpn"] = []string{alpns}
+		}
+		
+		if fingerprint != "" {
+			tlsSetting["fingerprint"] = fingerprint
+		}
+		
+		streamSetting.TLSSettings = tlsSetting
+		streamSetting.RealitySettings = nil
+	} else if streamSecurity == "reality" {
+		realitySetting := map[string]interface{}{
+			"allowInsecure": allowInsecure,
+			"serverName":    sni,
+		}
+		
+		if fingerprint != "" {
+			realitySetting["fingerprint"] = fingerprint
+		}
+		
+		if publicKey != "" {
+			realitySetting["publicKey"] = publicKey
+		}
+		
+		if shortId != "" {
+			realitySetting["shortId"] = shortId
+		}
+		
+		if spiderX != "" {
+			realitySetting["spiderX"] = spiderX
+		}
+		
+		streamSetting.RealitySettings = realitySetting
 		streamSetting.TLSSettings = nil
-		streamSetting.RealitySettings = tlsSetting
+	} else {
+		streamSetting.TLSSettings = nil
+		streamSetting.RealitySettings = nil
 	}
 }

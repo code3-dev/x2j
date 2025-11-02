@@ -63,7 +63,7 @@ func parseVLessURL(vlessURL string) (*models.V2RayConfig, error) {
 	}
 	
 	// TLS settings
-	populateTLSSettings(streamSetting, security, true, sni, fp, alpn, pbk, sid, spx)
+	populateTLSSettings(streamSetting, security, false, sni, fp, alpn, pbk, sid, spx)
 	
 	// Handle xhttp specific settings
 	if transport == "xhttp" {
@@ -188,7 +188,7 @@ func configToVLessURL(config *models.V2RayConfig, outbound *models.OutboundConfi
 					if headerTypeVal, ok := header["type"].(string); ok {
 						headerType = headerTypeVal
 					}
-					if headerType != "none" {
+					if headerType != "none" && headerType != "" {
 						query.Set("headerType", headerType)
 					}
 					
@@ -220,7 +220,7 @@ func configToVLessURL(config *models.V2RayConfig, outbound *models.OutboundConfi
 					if headerTypeVal, ok := header["type"].(string); ok {
 						headerType = headerTypeVal
 					}
-					if headerType != "none" {
+					if headerType != "none" && headerType != "" {
 						query.Set("headerType", headerType)
 					}
 				}
@@ -260,7 +260,7 @@ func configToVLessURL(config *models.V2RayConfig, outbound *models.OutboundConfi
 					if headerTypeVal, ok := header["type"].(string); ok {
 						headerType = headerTypeVal
 					}
-					if headerType != "none" {
+					if headerType != "none" && headerType != "" {
 						query.Set("headerType", headerType)
 					}
 				}
@@ -313,60 +313,64 @@ func configToVLessURL(config *models.V2RayConfig, outbound *models.OutboundConfi
 		if streamSettings.Security != "" {
 			query.Set("security", streamSettings.Security)
 			
+			// Try to extract TLS settings first
 			if tlsSettings, ok := streamSettings.TLSSettings.(map[string]interface{}); ok {
-				if serverName, ok := tlsSettings["serverName"].(string); ok && serverName != "" {
-					query.Set("sni", serverName)
-				}
-				
-				if alpn, ok := tlsSettings["alpn"].([]interface{}); ok && len(alpn) > 0 {
-					if alpnStr, ok := alpn[0].(string); ok && alpnStr != "" {
-						query.Set("alpn", alpnStr)
-					}
-				}
-				
-				if fingerprint, ok := tlsSettings["fingerprint"].(string); ok && fingerprint != "" {
-					query.Set("fp", fingerprint)
-				}
-				
-				if publicKey, ok := tlsSettings["publicKey"].(string); ok && publicKey != "" {
-					query.Set("pbk", publicKey)
-				}
-				
-				if shortId, ok := tlsSettings["shortId"].(string); ok && shortId != "" {
-					query.Set("sid", shortId)
-				}
-				
-				if spiderX, ok := tlsSettings["spiderX"].(string); ok && spiderX != "" {
-					query.Set("spx", spiderX)
-				}
+				extractTLSSettings(query, tlsSettings)
 			}
 			
+			// Try to extract Reality settings
 			if realitySettings, ok := streamSettings.RealitySettings.(map[string]interface{}); ok {
-				if serverName, ok := realitySettings["serverName"].(string); ok && serverName != "" {
-					query.Set("sni", serverName)
-				}
-				
-				if publicKey, ok := realitySettings["publicKey"].(string); ok && publicKey != "" {
-					query.Set("pbk", publicKey)
-				}
-				
-				if shortId, ok := realitySettings["shortId"].(string); ok && shortId != "" {
-					query.Set("sid", shortId)
-				}
-				
-				if spiderX, ok := realitySettings["spiderX"].(string); ok && spiderX != "" {
-					query.Set("spx", spiderX)
-				}
-				
-				if fingerprint, ok := realitySettings["fingerprint"].(string); ok && fingerprint != "" {
-					query.Set("fp", fingerprint)
-				}
+				extractRealitySettings(query, realitySettings)
 			}
 		}
 	}
 	
 	u.RawQuery = query.Encode()
 	return u.String(), nil
+}
+
+// extractTLSSettings extracts TLS settings to query parameters
+func extractTLSSettings(query url.Values, tlsSettings map[string]interface{}) {
+	if serverName, ok := tlsSettings["serverName"].(string); ok && serverName != "" {
+		query.Set("sni", serverName)
+	}
+	
+	if alpn, ok := tlsSettings["alpn"].([]interface{}); ok && len(alpn) > 0 {
+		if alpnStr, ok := alpn[0].(string); ok && alpnStr != "" {
+			query.Set("alpn", alpnStr)
+		}
+	}
+	
+	if fingerprint, ok := tlsSettings["fingerprint"].(string); ok && fingerprint != "" {
+		query.Set("fp", fingerprint)
+	}
+}
+
+// extractRealitySettings extracts Reality settings to query parameters
+func extractRealitySettings(query url.Values, realitySettings map[string]interface{}) {
+	if serverName, ok := realitySettings["serverName"].(string); ok && serverName != "" {
+		query.Set("sni", serverName)
+	}
+	
+	if publicKey, ok := realitySettings["publicKey"].(string); ok && publicKey != "" {
+		query.Set("pbk", publicKey)
+	}
+	
+	if shortId, ok := realitySettings["shortId"].(string); ok && shortId != "" {
+		query.Set("sid", shortId)
+	}
+	
+	if spiderX, ok := realitySettings["spiderX"].(string); ok && spiderX != "" {
+		query.Set("spx", spiderX)
+	}
+	
+	if fingerprint, ok := realitySettings["fingerprint"].(string); ok && fingerprint != "" {
+		query.Set("fp", fingerprint)
+	}
+	
+	if allowInsecure, ok := realitySettings["allowInsecure"].(bool); ok && allowInsecure {
+		query.Set("allowInsecure", "true")
+	}
 }
 
 // handleXhttpSettings handles xhttp specific settings
