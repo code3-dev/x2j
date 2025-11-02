@@ -131,6 +131,48 @@ graph TD
     J --> M[Display in Console]
 ```
 
+## 🖥️ Cross-platform Support
+
+The tool can be compiled for:
+- Windows (.exe - x86 and x64)
+- Windows (x86 and x64)
+- macOS (Darwin)
+- Linux
+- Android (.aar library, .jar library)
+- iOS (.xcframework)
+
+Note: The JSON to URL conversion features (-j, -jb64) output to console only and are available only on desktop platforms (Windows, macOS, Linux).
+
+### Global Installation Setup
+
+To make x2j accessible from any terminal/command prompt, use the platform-specific setup scripts in the `setup` directory:
+
+#### Windows
+```cmd
+setup\windows_setup.bat
+```
+After running, you can use `x2j` from any command prompt.
+
+#### macOS
+```bash
+chmod +x setup/macos_setup.sh
+./setup/macos_setup.sh
+```
+After running, you can use `x2j` from any terminal.
+
+#### Linux
+```bash
+chmod +x setup/linux_setup.sh
+./setup/linux_setup.sh
+```
+After running, you can use `x2j` from any terminal.
+
+These setup scripts will:
+1. Check if Go is installed
+2. Set up the Go environment
+3. Build the application
+4. Install it to your system PATH for global access
+
 ## 📱 Mobile Platform Integration
 
 For developers integrating x2j into mobile applications, check out our platform-specific integration guides:
@@ -162,18 +204,6 @@ Note:
 - gRPC
 - XHTTP
 - HTTPUpgrade
-
-## 🖥️ Cross-platform Support
-
-The tool can be compiled for:
-- Windows (.exe - x86 and x64)
-- Windows (x86 and x64)
-- macOS (Darwin)
-- Linux
-- Android (.aar library, .jar library)
-- iOS (.xcframework)
-
-Note: The JSON to URL conversion features (-j, -jb64) output to console only and are available only on desktop platforms (Windows, macOS, Linux).
 
 ## 🏗️ Building for Different Platforms
 
