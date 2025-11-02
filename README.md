@@ -46,6 +46,8 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 | `-p` | Custom inbound port (default: 1080) | Integer | All | N/A |
 | `-d` | Custom DNS servers | Comma-separated IPs | All | N/A |
 | `-r` | Remarks/Comments for configuration | String | All | N/A |
+| `-h` | Show help message | Flag | All | N/A |
+| `--help` | Show help message | Flag | All | N/A |
 
 ## 🎯 Usage Examples
 
@@ -92,6 +94,15 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 # Combine multiple options
 ./x2j -u "vmess://..." -o config.json -p 10809 -d "1.1.1.1, 1.0.0.1" -r "Home Proxy" -c
+```
+
+### Help
+
+```bash
+# Show help message
+./x2j -h
+# or
+./x2j --help
 ```
 
 ## 🔧 How It Works
