@@ -23,6 +23,37 @@ func ParseV2RayURL(v2rayURL string) (*models.V2RayConfig, error) {
 	}
 }
 
+// ConfigToV2RayURL converts a V2Ray configuration back to a share URL
+func ConfigToV2RayURL(config *models.V2RayConfig) (string, error) {
+	// Find the proxy outbound (first outbound is typically the proxy)
+	if len(config.Outbounds) == 0 {
+		return "", fmt.Errorf("no outbounds found in configuration")
+	}
+
+	proxyOutbound := config.Outbounds[0]
+	
+	switch proxyOutbound.Protocol {
+	case "vmess":
+		return configToVMessURL(config, &proxyOutbound)
+	case "vless":
+		return configToVLessURL(config, &proxyOutbound)
+	case "shadowsocks":
+		return configToShadowSocksURL(config, &proxyOutbound)
+	case "trojan":
+		return configToTrojanURL(config, &proxyOutbound)
+	default:
+		return "", fmt.Errorf("unsupported protocol: %s", proxyOutbound.Protocol)
+	}
+}
+
+// getStringQueryParam gets a string query parameter with a default value
+func getStringQueryParam(query map[string][]string, key, defaultValue string) string {
+	if values, ok := query[key]; ok && len(values) > 0 {
+		return values[0]
+	}
+	return defaultValue
+}
+
 // createBaseConfig creates the base V2Ray configuration structure
 func createBaseConfig() *models.V2RayConfig {
 	return &models.V2RayConfig{

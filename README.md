@@ -16,6 +16,9 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
   - Combined console and file output
 - Customizable inbound port with `-p` flag
 - Customizable DNS servers with `-d` flag
+- JSON to URL conversion with `-j` flag (desktop platforms only)
+- Base64-encoded JSON input with `-jb64` flag (desktop platforms only)
+- Base64-encoded URL input with `-ub64` flag (desktop platforms only)
 
 ## Installation
 
@@ -53,6 +56,15 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 # Add remarks/comments to the configuration
 ./x2j -u <v2ray_link> -r "My Proxy Configuration"
+
+# Convert JSON file to URL (desktop platforms only)
+./x2j -j <json_file>
+
+# Convert base64-encoded JSON to URL (desktop platforms only)
+./x2j -jb64 <base64_encoded_json>
+
+# Convert base64-encoded URL to JSON (desktop platforms only)
+./x2j -ub64 <base64_encoded_url>
 ```
 
 ### Command Examples
@@ -102,6 +114,15 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 # Save in json file with custom port, DNS and remarks
 ./x2j -u <v2ray link> -o out.json -p 10809 -d "1.1.1.1, 1.0.0.1" -r "Home Proxy"
+
+# Convert JSON file to URL (desktop platforms only)
+./x2j -j config.json
+
+# Convert base64-encoded JSON to URL (desktop platforms only)
+./x2j -jb64 "base64_encoded_json_string"
+
+# Convert base64-encoded URL to JSON (desktop platforms only)
+./x2j -ub64 "base64_encoded_url_string"
 ```
 
 Note: You can rename the executable file to anything for easier usage, for example: `./myapp -u <v2ray link> -o out.json`
@@ -129,6 +150,15 @@ Note: You can rename the executable file to anything for easier usage, for examp
 
 # VMess URL with single DNS server
 ./x2j -u "vmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOjAsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOjgwODAsInBzIjoidGVzdCIsInRscyI6IiIsInYiOjIsImFpZCI6MCwidHlwZSI6IiJ9" -d "1.1.1.1" -c
+
+# Convert JSON file to URL (desktop platforms only)
+./x2j -j config.json
+
+# Convert base64-encoded JSON to URL (desktop platforms only)
+./x2j -jb64 "base64_encoded_json_string"
+
+# Convert base64-encoded URL to JSON (desktop platforms only)
+./x2j -ub64 "base64_encoded_url_string"
 ```
 
 ## Mobile Platform Integration
@@ -173,10 +203,12 @@ The tool can be compiled for:
 - Android (.aar library, .jar library)
 - iOS (.xcframework)
 
+Note: The JSON to URL conversion features (-j, -jb64, -ub64) are available only on desktop platforms (Windows, macOS, Linux).
+
 ## Building for Different Platforms
 
 ### Windows Executable
-```
+```bash
 # For x64
 GOOS=windows GOARCH=amd64 go build -o x2j.exe .
 
@@ -185,12 +217,12 @@ GOOS=windows GOARCH=386 go build -o x2j.exe .
 ```
 
 ### macOS
-```
+```bash
 GOOS=darwin GOARCH=amd64 go build -o x2j .
 ```
 
 ### Linux
-```
+```bash
 GOOS=linux GOARCH=amd64 go build -o x2j .
 ```
 
