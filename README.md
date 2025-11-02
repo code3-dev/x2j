@@ -15,8 +15,8 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 - Cross-platform compatibility (Windows, macOS, Linux, Android, iOS)
 - Multiple output options:
   - Console output
-  - JSON file output
-  - Combined console and file output
+  - JSON file output (URL to JSON only)
+  - Combined console and file output (URL to JSON only)
 - Customizable inbound port and DNS servers
 
 ## 🛠️ Installation
@@ -35,21 +35,21 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 ## 📋 Command Line Flags
 
-| Flag | Description | Input Type | Platforms |
-|------|-------------|------------|-----------|
-| `-u` | V2Ray share link to convert to JSON | URL string | All |
-| `-j` | JSON file to convert to share link | File path | Desktop only |
-| `-jb64` | Base64-encoded JSON to convert to share link | Base64 string | Desktop only |
-| `-ub64` | Base64-encoded URL to convert to JSON | Base64 string | Desktop only |
-| `-o` | Output JSON file path | File path | All |
-| `-c` | Show JSON in console | Flag | All |
-| `-p` | Custom inbound port (default: 1080) | Integer | All |
-| `-d` | Custom DNS servers | Comma-separated IPs | All |
-| `-r` | Remarks/Comments for configuration | String | All |
+| Flag | Description | Input Type | Platforms | Output Options |
+|------|-------------|------------|-----------|----------------|
+| `-u` | V2Ray share link to convert to JSON | URL string | All | Console, File, Both |
+| `-j` | JSON file to convert to share link | File path | Desktop only | Console only |
+| `-jb64` | Base64-encoded JSON to convert to share link | Base64 string | Desktop only | Console only |
+| `-ub64` | Base64-encoded URL to convert to JSON | Base64 string | Desktop only | Console, File, Both |
+| `-o` | Output JSON file path | File path | All | N/A (applies to URL to JSON) |
+| `-c` | Show output in console | Flag | All | N/A |
+| `-p` | Custom inbound port (default: 1080) | Integer | All | N/A |
+| `-d` | Custom DNS servers | Comma-separated IPs | All | N/A |
+| `-r` | Remarks/Comments for configuration | String | All | N/A |
 
 ## 🎯 Usage Examples
 
-### Basic Conversion
+### Share Link to JSON Conversion
 
 ```bash
 # Convert share link to JSON and display in console
@@ -60,6 +60,22 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 
 # Convert share link to JSON file and display in console
 ./x2j -u "vmess://..." -o config.json -c
+```
+
+### JSON to Share Link Conversion (Desktop only)
+
+```bash
+# Convert JSON file to share link (output to console only)
+./x2j -j config.json
+
+# Convert base64-encoded JSON to share link (output to console only)
+./x2j -jb64 "base64_encoded_json_string"
+
+# Convert base64-encoded URL to JSON
+./x2j -ub64 "base64_encoded_url_string"
+
+# Convert base64-encoded URL to JSON file
+./x2j -ub64 "base64_encoded_url_string" -o config.json
 ```
 
 ### Advanced Options
@@ -78,19 +94,6 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
 ./x2j -u "vmess://..." -o config.json -p 10809 -d "1.1.1.1, 1.0.0.1" -r "Home Proxy" -c
 ```
 
-### JSON to Share Link Conversion (Desktop only)
-
-```bash
-# Convert JSON file to share link
-./x2j -j config.json
-
-# Convert base64-encoded JSON to share link
-./x2j -jb64 "base64_encoded_json_string"
-
-# Convert base64-encoded URL to JSON
-./x2j -ub64 "base64_encoded_url_string"
-```
-
 ## 🔧 How It Works
 
 ```mermaid
@@ -107,17 +110,14 @@ graph TD
     F --> G
     
     G --> I{Output Options}
-    H --> J{Output Options}
+    H --> J[Display Share Link]
     
     I -->|Console| K[Display JSON]
     I -->|File| L[Save JSON File]
     I -->|Both| K
     I -->|Both| L
     
-    J -->|Console| M[Display Share Link]
-    J -->|File| N[Save Share Link]
-    J -->|Both| M
-    J -->|Both| N
+    J --> M[Display in Console]
 ```
 
 ## 📱 Mobile Platform Integration
@@ -162,7 +162,7 @@ The tool can be compiled for:
 - Android (.aar library, .jar library)
 - iOS (.xcframework)
 
-Note: The JSON to URL conversion features (-j, -jb64, -ub64) are available only on desktop platforms (Windows, macOS, Linux).
+Note: The JSON to URL conversion features (-j, -jb64) output to console only and are available only on desktop platforms (Windows, macOS, Linux).
 
 ## 🏗️ Building for Different Platforms
 
