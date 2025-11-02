@@ -1,26 +1,25 @@
 # x2j - Xray to JSON Converter
 
-A command-line tool written in Go that converts V2Ray share links (VMess, VLess, ShadowSocks, Trojan) to Xray JSON configuration files.
+A command-line tool written in Go that converts V2Ray share links (VMess, VLess, ShadowSocks, Trojan) to Xray JSON configuration files and vice versa.
 
-## Features
+## 🚀 Features
 
 - Supports all major V2Ray protocols:
   - VMess
   - VLess
   - Shadowsocks
   - Trojan
+- Bidirectional conversion:
+  - Share links → Xray JSON
+  - Xray JSON → Share links
 - Cross-platform compatibility (Windows, macOS, Linux, Android, iOS)
 - Multiple output options:
   - Console output
   - JSON file output
   - Combined console and file output
-- Customizable inbound port with `-p` flag
-- Customizable DNS servers with `-d` flag
-- JSON to URL conversion with `-j` flag (desktop platforms only)
-- Base64-encoded JSON input with `-jb64` flag (desktop platforms only)
-- Base64-encoded URL input with `-ub64` flag (desktop platforms only)
+- Customizable inbound port and DNS servers
 
-## Installation
+## 🛠️ Installation
 
 1. Install Go 1.25.0 or later
 2. Clone this repository
@@ -34,134 +33,94 @@ A command-line tool written in Go that converts V2Ray share links (VMess, VLess,
    go build -o x2j .
    ```
 
-## Usage
+## 📋 Command Line Flags
 
-### Basic usage
+| Flag | Description | Input Type | Platforms |
+|------|-------------|------------|-----------|
+| `-u` | V2Ray share link to convert to JSON | URL string | All |
+| `-j` | JSON file to convert to share link | File path | Desktop only |
+| `-jb64` | Base64-encoded JSON to convert to share link | Base64 string | Desktop only |
+| `-ub64` | Base64-encoded URL to convert to JSON | Base64 string | Desktop only |
+| `-o` | Output JSON file path | File path | All |
+| `-c` | Show JSON in console | Flag | All |
+| `-p` | Custom inbound port (default: 1080) | Integer | All |
+| `-d` | Custom DNS servers | Comma-separated IPs | All |
+| `-r` | Remarks/Comments for configuration | String | All |
+
+## 🎯 Usage Examples
+
+### Basic Conversion
 
 ```bash
-# Show JSON in console
-./x2j -u <v2ray_link>
+# Convert share link to JSON and display in console
+./x2j -u "vmess://..."
 
-# Save to JSON file
-./x2j -u <v2ray_link> -o out.json
+# Convert share link to JSON file
+./x2j -u "vmess://..." -o config.json
 
-# Save to JSON file and show in console
-./x2j -u <v2ray_link> -o out.json -c
-
-# Set custom inbound port (default is 1080)
-./x2j -u <v2ray_link> -p 10809
-
-# Set custom DNS servers
-./x2j -u <v2ray_link> -d "1.1.1.1, 1.0.0.1"
-
-# Add remarks/comments to the configuration
-./x2j -u <v2ray_link> -r "My Proxy Configuration"
-
-# Convert JSON file to URL (desktop platforms only)
-./x2j -j <json_file>
-
-# Convert base64-encoded JSON to URL (desktop platforms only)
-./x2j -jb64 <base64_encoded_json>
-
-# Convert base64-encoded URL to JSON (desktop platforms only)
-./x2j -ub64 <base64_encoded_url>
+# Convert share link to JSON file and display in console
+./x2j -u "vmess://..." -o config.json -c
 ```
 
-### Command Examples
+### Advanced Options
 
 ```bash
-# Save in json file
-./x2j -u <v2ray link> -o out.json
-
-# Show json in console without save
-./x2j -u <v2ray link>
-
-# Save in json file and show json in console
-./x2j -u <v2ray link> -o out.json -c
-
 # Set custom inbound port
-./x2j -u <v2ray link> -p 10809
+./x2j -u "vmess://..." -p 10809
 
 # Set custom DNS servers
-./x2j -u <v2ray link> -d "1.1.1.1, 1.0.0.1, 8.8.8.8"
+./x2j -u "vmess://..." -d "1.1.1.1, 1.0.0.1"
 
-# Clear DNS servers
-./x2j -u <v2ray link> -d ""
+# Add remarks to configuration
+./x2j -u "vmess://..." -r "My Proxy Configuration"
 
-# Save in json file with custom port
-./x2j -u <v2ray link> -o out.json -p 10809
-
-# Save in json file with custom port and show in console
-./x2j -u <v2ray link> -o out.json -p 10809 -c
-
-# Save in json file with custom DNS
-./x2j -u <v2ray link> -o out.json -d "1.1.1.1, 1.0.0.1"
-
-# Save in json file with custom port and DNS
-./x2j -u <v2ray link> -o out.json -p 10809 -d "1.1.1.1, 1.0.0.1"
-
-# Save in json file with absolute path
-./x2j -u <v2ray link> -o C:\Users\Dell\Downloads\go\x2j\out.json
-
-# Save in json file with relative path
-./x2j -u <v2ray link> -o files/out.json
-
-# Save in json file with parent directory path
-./x2j -u <v2ray link> -o ../files/out.json
-
-# Save in json file with remarks
-./x2j -u <v2ray link> -o out.json -r "Office Proxy"
-
-# Save in json file with custom port, DNS and remarks
-./x2j -u <v2ray link> -o out.json -p 10809 -d "1.1.1.1, 1.0.0.1" -r "Home Proxy"
-
-# Convert JSON file to URL (desktop platforms only)
-./x2j -j config.json
-
-# Convert base64-encoded JSON to URL (desktop platforms only)
-./x2j -jb64 "base64_encoded_json_string"
-
-# Convert base64-encoded URL to JSON (desktop platforms only)
-./x2j -ub64 "base64_encoded_url_string"
+# Combine multiple options
+./x2j -u "vmess://..." -o config.json -p 10809 -d "1.1.1.1, 1.0.0.1" -r "Home Proxy" -c
 ```
 
-Note: You can rename the executable file to anything for easier usage, for example: `./myapp -u <v2ray link> -o out.json`
-
-### Examples
+### JSON to Share Link Conversion (Desktop only)
 
 ```bash
-# VMess URL to console with custom port
-./x2j -u "vmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOjAsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOjgwODAsInBzIjoidGVzdCIsInRscyI6IiIsInYiOjIsImFpZCI6MCwidHlwZSI6IiJ9" -p 10809
-
-# VLess URL to file with custom port
-./x2j -u "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:8080?security=tls&type=ws&path=/&host=example.com#test" -o vless_config.json -p 10809
-
-# ShadowSocks URL to file and console with custom port
-./x2j -u "ss://YWVzLTEyOC1nY206cGFzc3dvcmQ@127LjAuMC4xOjgwODA#test" -o ss_config.json -p 10809 -c
-
-# Trojan URL to file with custom port
-./x2j -u "trojan://password@127.0.0.1:8080?security=tls&type=tcp#test" -o trojan_config.json -p 10809
-
-# VMess URL with custom DNS servers
-./x2j -u "vmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOjAsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOjgwODAsInBzIjoidGVzdCIsInRscyI6IiIsInYiOjIsImFpZCI6MCwidHlwZSI6IiJ9" -d "1.1.1.1, 1.0.0.1, 8.8.8.8" -c
-
-# VMess URL with no DNS servers (use system DNS)
-./x2j -u "vmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOjAsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOjgwODAsInBzIjoidGVzdCIsInRscyI6IiIsInYiOjIsImFpZCI6MCwidHlwZSI6IiJ9" -d "" -c
-
-# VMess URL with single DNS server
-./x2j -u "vmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOjAsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOjgwODAsInBzIjoidGVzdCIsInRscyI6IiIsInYiOjIsImFpZCI6MCwidHlwZSI6IiJ9" -d "1.1.1.1" -c
-
-# Convert JSON file to URL (desktop platforms only)
+# Convert JSON file to share link
 ./x2j -j config.json
 
-# Convert base64-encoded JSON to URL (desktop platforms only)
+# Convert base64-encoded JSON to share link
 ./x2j -jb64 "base64_encoded_json_string"
 
-# Convert base64-encoded URL to JSON (desktop platforms only)
+# Convert base64-encoded URL to JSON
 ./x2j -ub64 "base64_encoded_url_string"
 ```
 
-## Mobile Platform Integration
+## 🔧 How It Works
+
+```mermaid
+graph TD
+    A[Input Source] --> B{Input Type}
+    B -->|Share Link| C[Parse V2Ray URL]
+    B -->|JSON File| D[Read JSON File]
+    B -->|Base64 JSON| E[Decode Base64 JSON]
+    B -->|Base64 URL| F[Decode Base64 URL]
+    
+    C --> G[Convert to Xray JSON]
+    D --> H[Convert to Share Link]
+    E --> H
+    F --> G
+    
+    G --> I{Output Options}
+    H --> J{Output Options}
+    
+    I -->|Console| K[Display JSON]
+    I -->|File| L[Save JSON File]
+    I -->|Both| K
+    I -->|Both| L
+    
+    J -->|Console| M[Display Share Link]
+    J -->|File| N[Save Share Link]
+    J -->|Both| M
+    J -->|Both| N
+```
+
+## 📱 Mobile Platform Integration
 
 For developers integrating x2j into mobile applications, check out our platform-specific integration guides:
 
@@ -175,14 +134,14 @@ Note:
 - Target=ios requires the host machine to be running macOS.
 - As of Go 1.5, only darwin/amd64 works on the iOS simulator.
 
-## Supported Protocols
+## 📡 Supported Protocols
 
 - **VMess**: Full support for all VMess configurations
 - **VLess**: Full support including TLS, Reality, and various transport protocols
 - **ShadowSocks**: Support for all ShadowSocks methods
 - **Trojan**: Full support including TLS configurations
 
-## Supported Transport Protocols
+## 🌐 Supported Transport Protocols
 
 - TCP
 - WebSocket (WS)
@@ -193,7 +152,7 @@ Note:
 - XHTTP
 - HTTPUpgrade
 
-## Cross-platform Support
+## 🖥️ Cross-platform Support
 
 The tool can be compiled for:
 - Windows (.exe - x86 and x64)
@@ -205,7 +164,7 @@ The tool can be compiled for:
 
 Note: The JSON to URL conversion features (-j, -jb64, -ub64) are available only on desktop platforms (Windows, macOS, Linux).
 
-## Building for Different Platforms
+## 🏗️ Building for Different Platforms
 
 ### Windows Executable
 ```bash
@@ -242,6 +201,6 @@ GOOS=linux GOARCH=amd64 go build -o x2j .
 # Select option 2 for iOS framework
 ```
 
-## License
+## 📄 License
 
 This project is licensed under the [GPL v3 License](LICENSE).
